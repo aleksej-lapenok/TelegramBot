@@ -3,6 +3,7 @@ package ru.ifmo.telegram.bot.services.game
 interface Game<T> {
     fun step(step: Step<T>)
     val board:Array<Array<T>>
+    fun finish()
 }
 
 interface Step<T> {
