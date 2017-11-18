@@ -10,7 +10,7 @@ import javax.persistence.Id
 
 @Entity
 @Builder
-public data class Player(@Id val id: Long? = null,
-                      val name: String,
-                      val chatId: Long)
+data class Player(@Id val id: Long? = null,
+                  val name: String,
+                  val chatId: Long)
 
