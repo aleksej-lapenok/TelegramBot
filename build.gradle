@@ -38,14 +38,15 @@ configurations {
 }
 
 dependencies {
-//	compile('org.springframework.boot:spring-boot-starter-data-jpa')
-//	compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+	compile('org.springframework.boot:spring-boot-starter-data-jpa')
 	compile('org.springframework.boot:spring-boot-starter-web')
+//	compile("org.springframework.boot:spring-boot-starter-thymeleaf")
 	compile("org.jetbrains.kotlin:kotlin-stdlib-jre8:${kotlinVersion}")
 	compile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-//	runtime('mysql:mysql-connector-java')
-//	runtime('org.postgresql:postgresql')
+	runtime('mysql:mysql-connector-java')
 	compileOnly('org.projectlombok:lombok')
-	providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
+//	providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
+	compile('org.apache.tomcat.embed:tomcat-embed-el')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
+
 }

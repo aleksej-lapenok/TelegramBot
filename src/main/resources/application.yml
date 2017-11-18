@@ -3,3 +3,6 @@ spring:
     encoding: UTF-8
     basename: massages/messages
 
+  profiles:
+    active:
+      - mysql
