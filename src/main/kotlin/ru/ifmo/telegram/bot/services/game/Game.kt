@@ -10,7 +10,7 @@ interface Game<in T : Step> {
     /**
      * accept step and change state of game
      */
-    fun step(step: T)
+    fun step(step: T): String
 
     /**
      * return state of game
