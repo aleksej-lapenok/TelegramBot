@@ -15,18 +15,15 @@ import java.nio.charset.Charset
 import java.util.*
 
 @Service
-class UpdateRequest(val updatesCollector: UpdatesCollector) {
+class UpdateRequest(@Value("\${bot-token}") val token: String) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
-
-    @Value("\${bot-token}")
-    private val token: String? = null
 
     @Scheduled(fixedDelay = 1000)
     fun getUpdates() {
         val parser = JsonParser()
 
-        val response = parser.parse(URL("https://api.telegram.org/bot${token}/getupdates").readText(Charset.defaultCharset()))
+        val response = parser.parse(URL("https://api.telegram.org/bot$token/getupdates").readText(Charset.defaultCharset()))
                 .takeIf { it.isJsonObject }?.asJsonObject ?: throw Exception()
         val ok = response["ok"]?.takeIf { it.isJsonPrimitive }?.asBoolean ?: throw Exception()
         if (ok)
