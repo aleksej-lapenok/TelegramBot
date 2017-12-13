@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		kotlinVersion = '1.2.0'
+		kotlinVersion = '1.2.10'
 		springBootVersion = '1.5.8.RELEASE'
 	}
 	repositories {
@@ -44,9 +44,7 @@ dependencies {
 	compile("org.jetbrains.kotlin:kotlin-stdlib-jre8:${kotlinVersion}")
 	compile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
 	runtime('mysql:mysql-connector-java')
-//	runtime('org.postgresql:postgresql:9.4-1201-jdbc41')
 	compileOnly('org.projectlombok:lombok')
-	compile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
 //	providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
 	compile('org.apache.tomcat.embed:tomcat-embed-el')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
