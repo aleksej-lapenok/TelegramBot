@@ -1,9 +1,11 @@
 package ru.ifmo.services.game.tictactoe;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.GameFactory;
 
+@Service
 public class TTTGameFactory implements GameFactory<TTTStep, TicTacToeGame<TTTStep>> {
     @Override
     public int maxNumberPlayers() {
