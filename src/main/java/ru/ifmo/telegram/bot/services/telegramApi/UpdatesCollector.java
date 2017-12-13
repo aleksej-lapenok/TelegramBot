@@ -32,7 +32,6 @@ public class UpdatesCollector {
         logger.info(response.toString());
         List<Update> updates = new ArrayList<>();
         try {
-            ObjectMapper mapper = new ObjectMapper();
             //System.out.println(actualObj.get("response").get("items").isArray());
 //            actualObj = actualObj.get("response");
             response.forEach(
