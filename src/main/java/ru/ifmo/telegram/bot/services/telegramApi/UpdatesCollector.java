@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,21 +26,22 @@ public class UpdatesCollector {
 
     }
 
-    List<Update> getUpdates(Integer number, String response) {
+    public List<Update> getUpdates(String response) {
         logger.info(response);
-        List<Update> updates = new LinkedList<>();
+        List<Update> updates = new ArrayList<>();
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode actualObj = mapper.readTree(response);
             //System.out.println(actualObj.get("response").get("items").isArray());
-            actualObj = actualObj.get("response");
+//            actualObj = actualObj.get("response");
             for (JsonNode jpost : actualObj) {
+                Integer update_id=jpost.get("update_id").asInt();
                 if (jpost.has("message")) {
                     JsonNode obj = jpost.get("message");
                     Integer from = obj.get("from").get("id").asInt();
                     Integer where = obj.get("chat").get("id").asInt();
                     String text = obj.get("text").asText();
-                    updates.add(new Update(from, where, "message", text));
+                    updates.add(new Update(Update.TypeUpdate.MESSAGE, text,from, where, update_id));
                 } else {
                     if (jpost.has("callback_query")) {
                         JsonNode obj = jpost.get("callback_query");
@@ -50,12 +53,12 @@ public class UpdatesCollector {
                             where = from;
                         }
                         String data = obj.get("data").asText();
-                        updates.add(new Update(from, where, "callback_query", data));
+                        updates.add(new Update(Update.TypeUpdate.CALLBACK_QUEARY,data,from, where, update_id));
                     } else {
                         logger.info("unsupported update");
                     }
                 }
-                int i  = (int) (System.currentTimeMillis() / 1000 -  jpost.get("date").asInt()) / 3600;
+//                int i  = (int) (System.currentTimeMillis() / 1000 -  jpost.get("date").asInt()) / 3600;
             }
         } catch (Exception e) {
             System.err.print("hi");

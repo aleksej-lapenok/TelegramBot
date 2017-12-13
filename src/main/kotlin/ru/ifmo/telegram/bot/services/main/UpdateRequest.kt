@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -15,7 +16,8 @@ import java.nio.charset.Charset
 import javax.net.ssl.HttpsURLConnection
 
 @Service
-class UpdateRequest(@Value("\${bot-token}") val token: String) {
+class UpdateRequest(@Value("\${bot-token}") val token: String,
+                    val updatesCollector: UpdatesCollector) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -23,12 +25,13 @@ class UpdateRequest(@Value("\${bot-token}") val token: String) {
     fun getUpdates() {
         val parser = JsonParser()
 
-        val response = parser.parse(URL("https://api.telegram.org/bot$token/getupdates").readText(Charset.defaultCharset()))
+        val response = parser.parse(URL("https://api.telegram.org/bot$token/getupdates?offset=434540662").readText(Charset.defaultCharset()))
                 .takeIf { it.isJsonObject }?.asJsonObject ?: throw Exception()
         val ok = response["ok"]?.takeIf { it.isJsonPrimitive }?.asBoolean ?: throw Exception()
-        if (ok)
-            logger.info(response["result"]?.asJsonArray.toString())
-        //todo: call Sasha's code
+        if (ok) {
+            val result = updatesCollector.getUpdates(response["result"]?.asJsonArray.toString())
+
+        }
         else
             logger.warn(response.asString)
     }
