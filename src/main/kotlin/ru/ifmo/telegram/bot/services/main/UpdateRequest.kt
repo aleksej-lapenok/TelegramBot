@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import ru.ifmo.telegram.bot.entity.Player
+import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import java.io.BufferedReader
 import java.io.BufferedWriter
@@ -17,22 +19,30 @@ import javax.net.ssl.HttpsURLConnection
 
 @Service
 class UpdateRequest(@Value("\${bot-token}") val token: String,
-                    val updatesCollector: UpdatesCollector) {
+                    val updatesCollector: UpdatesCollector,
+                    val playerRepository: PlayerRepository) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
+    private var lastUpdate = 0L
 
     @Scheduled(fixedDelay = 1000)
     fun getUpdates() {
         val parser = JsonParser()
 
-        val response = parser.parse(URL("https://api.telegram.org/bot$token/getupdates?offset=434540662").readText(Charset.defaultCharset()))
+        val response = parser.parse(URL("https://api.telegram.org/bot$token/getupdates?offset=${lastUpdate + 1}").readText(Charset.defaultCharset()))
                 .takeIf { it.isJsonObject }?.asJsonObject ?: throw Exception()
         val ok = response["ok"]?.takeIf { it.isJsonPrimitive }?.asBoolean ?: throw Exception()
         if (ok) {
-            val result = updatesCollector.getUpdates(response["result"]?.asJsonArray.toString())
-
-        }
-        else
+            val result = updatesCollector.getUpdates(response["result"]?.asJsonArray)
+            lastUpdate = result.maxBy { it.update_id }?.update_id ?: lastUpdate
+            for (update in result) {
+                if (update.data=="/start") {
+                    if (playerRepository.findByChatId(update.chatId) == null) {
+                        playerRepository.save(Player(name = update.name!!, chatId = update.chatId))
+                    }
+                }
+            }
+        } else
             logger.warn(response.asString)
     }
 

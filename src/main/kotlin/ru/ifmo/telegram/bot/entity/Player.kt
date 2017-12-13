@@ -4,13 +4,11 @@ import lombok.AllArgsConstructor
 import lombok.Builder
 import lombok.Data
 import lombok.NoArgsConstructor
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import javax.persistence.*
 
 @Entity
-@Builder
-data class Player(@Id val id: Long? = null,
-                  val name: String,
-                  val chatId: Long)
+@Table(indexes = [(Index(columnList = "chatId", unique = true))], name = "player")
+data class Player(@Id @GeneratedValue var id: Long? = null,
+                  val name: String?,
+                  val chatId: Long?)
 
