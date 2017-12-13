@@ -9,6 +9,6 @@ import javax.persistence.*
 @Entity
 @Table(indexes = [(Index(columnList = "chatId", unique = true))], name = "player")
 data class Player(@Id @GeneratedValue var id: Long? = null,
-                  val name: String?,
-                  val chatId: Long?)
+                  val name: String? = null,
+                  val chatId: Long? = null)
 
