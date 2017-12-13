@@ -1,8 +1,10 @@
 package ru.ifmo.services.game.tictactoe;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Step;
+import ru.ifmo.telegram.bot.services.game.StepFactory;
 
 /**
  * Created by Cawa on 02.12.2017.
@@ -46,3 +48,4 @@ public class TTTStep implements Step {
         return sb.toString();
     }
 }
+
