@@ -11,5 +11,5 @@ interface GameFactory<in T : Step, out E : Game<T>> {
 }
 
 interface StepFactory<out T : Step> {
-    fun getStep(str: String): T
+    fun getStep(str: String, p: Player): T
 }
