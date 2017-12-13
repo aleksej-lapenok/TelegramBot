@@ -98,8 +98,8 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
     }
 
     @Override
-    public void finish() {
-        // hm... what should it do;
+    public void finish(@NotNull Player player) {
+        //todo: write smth
     }
 
     @NotNull
