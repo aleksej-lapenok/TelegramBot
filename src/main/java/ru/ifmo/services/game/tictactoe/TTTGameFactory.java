@@ -1,6 +1,7 @@
 package ru.ifmo.services.game.tictactoe;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.GameFactory;
