@@ -25,7 +25,7 @@ interface Game<in T : Step> {
     /**
      * finish game
      */
-    fun finish()
+    fun finish(player: Player)
 
     /**
      * return json of game
