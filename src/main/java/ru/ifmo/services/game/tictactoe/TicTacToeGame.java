@@ -74,7 +74,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
             }
         }
         if (p.equals(p2))  {
-
+// todo:
         }
         return null;
     }
@@ -107,6 +107,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
     public String toJson() {
         // just part of db system, I will make issue for it
         return "";
+        // todo: write this method
     }
 }
 
