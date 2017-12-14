@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -63,12 +64,12 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         }
         if (player.equals(player1)) {
             if (currPlayer == 1) {
-                return "Make your turn, Player One";
+                return "Make your turn, " + player1.getName();
             }
         }
         if (player.equals(player2)) {
             if (currPlayer == -1) {
-                return "Make your turn, Player Two";
+                return "Make your turn, " + player2.getName();
             }
         }
         return "";
@@ -77,12 +78,18 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @NotNull
     @Override
     public String toJson() {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public void surrender(@NotNull Player player) {
-
+        if (player.equals(player1)) {
+            winner = player2;
+            currPlayer = 0;
+        } else if (player.equals(player2)) {
+            winner = player1;
+            currPlayer = 0;
+        }
     }
 
     @NotNull
