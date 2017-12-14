@@ -70,7 +70,7 @@ class UpdateRequest(
                 }
                 val game = games[update.chatId]!!
                 val player = playerRepository.findByChatId(chatId = update.chatId)!!
-                games[update.chatId]!!.finish(player)
+                games[update.chatId]!!.surrender(player)
                 telegramSender.sendMessage(update.chatId, "You left this game")
                 telegramSender.sendMessage(update.chatId, games[update.chatId]!!.getMessage(player))
 
