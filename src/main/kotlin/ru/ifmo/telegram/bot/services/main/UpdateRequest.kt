@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
+import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 
@@ -79,14 +80,18 @@ class UpdateRequest(
                 games.remove(update.chatId)
                 continue
             }
-            if (update.data.startsWith("/step")) {
+            if (update.data.startsWith("/turn")) {
                 if (games[update.chatId] == null) {
                     logger.info("You should start game")
                     continue
                 }
                 val game = games[update.chatId]!!
-                val player = playerRepository.findByChatId(update.chatId)
-
+                val player = playerRepository.findByChatId(update.chatId)!!
+                val stepFactory = mainGameFactory.getStepFactory(game.getGameId())!!
+                val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
+                telegramSender.sendMessage(update.chatId, (game as Game<Step>).step(step as Step))
+                game.getPlayes()
+                        .forEach { telegramSender.sendMessage(it.chatId, game.getMessage(it)) }
                 continue
             }
             telegramSender.sendMessage(update.chatId, "Unknown command: ${update.data}")

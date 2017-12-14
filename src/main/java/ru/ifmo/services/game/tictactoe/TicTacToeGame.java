@@ -68,25 +68,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     @NotNull
     @Override
     public String getMessage(@NotNull Player p) {
-        if (currPlayer == 0) {
-            return winner.getName() + " won";
-        }
-        if (p.equals(p1)) {
-            if (currPlayer == 1) {
-                return "Make your turn";
-            } else {
-                return "Wait for opponent's turn";
-            }
-        }
-        if (p.equals(p2)) {
-            if (currPlayer == -1) {
-                return "Make your turn";
-            } else {
-                return "Wait for opponent's turn";
-            }
-// todo:
-        }
-        return null;
+        return getInfo(p);
     }
 
     public String getInfo(Player p) {
