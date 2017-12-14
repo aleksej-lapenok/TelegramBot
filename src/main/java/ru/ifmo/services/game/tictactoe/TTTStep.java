@@ -38,14 +38,12 @@ public class TTTStep implements Step {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Player ");
-        sb.append(p.getName());
-        sb.append("\nMakes turn on ");
-        sb.append(Integer.toString(x));
-        sb.append(' ');
-        sb.append(Integer.toString(y));
-        return sb.toString();
+        return "Player " +
+                p.getName() +
+                "\nMakes turn on " +
+                Integer.toString(x) +
+                ' ' +
+                Integer.toString(y);
     }
 }
 
