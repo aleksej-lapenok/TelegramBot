@@ -29,6 +29,7 @@ public class CheckersStep implements Step {
             x2 = 0;
             y2 = 0;
         }
+        this.player = player;
     }
     @NotNull
     @Override
