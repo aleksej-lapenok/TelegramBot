@@ -1,25 +1,22 @@
 package ru.ifmo.telegram.bot.services.main
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.ifmo.services.game.tictactoe.TTTGameFactory
 import ru.ifmo.services.game.tictactoe.TTTStepFactory
-import ru.ifmo.telegram.bot.services.game.Game
-import ru.ifmo.telegram.bot.services.game.GameFactory
-import ru.ifmo.telegram.bot.services.game.Step
 
 @Service
-class MainGameFactory() {
-    val gameFactoris = mutableMapOf(Pair(Games.TTT, TTTGameFactory()))
+class MainGameFactory {
+    val gameFactories = mutableMapOf(Pair(Games.TTT, TTTGameFactory()))
 
-    fun getGameFactory(name: String) = gameFactoris[Games.valueOf(name)]
-}
+    fun getGameFactory(name: String) = getGameFactory(Games.valueOf(name))
 
-@Service
-class MainStepFactory {
-    val stepFactoris = mutableMapOf(Pair(Games.TTT, TTTStepFactory()))
+    fun getGameFactory(games: Games) = gameFactories[games]
 
-    fun getStepFactory(name: String) = stepFactoris[Games.valueOf(name)]
+    val stepFactories = mutableMapOf(Pair(Games.TTT, TTTStepFactory()))
+
+    fun getStepFactory(name: String) = getStepFactory(Games.valueOf(name))
+
+    fun getStepFactory(games: Games) = stepFactories[games]
 }
 
 enum class Games {

@@ -24,12 +24,12 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         board = new Board();
     }
 
-    TicTacToeGame(Player player1, Player player2, boolean startWithFirst) {
-        p1 = player1;
-        p2 = player2;
-        currPlayer = startWithFirst ? 1 : -1;
-        board = new Board();
-    }
+//    TicTacToeGame(Player player1, Player player2, boolean startWithFirst) {
+//        p1 = player1;
+//        p2 = player2;
+//        currPlayer = startWithFirst ? 1 : -1;
+//        board = new Board();
+//    }
 
     private boolean checkWinner() {
         return board.hasThreeInARow();
@@ -39,24 +39,35 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     @NotNull
     public String step(@NotNull S step) {
         if (currPlayer == 0) {
-            return "Game is won by " + winner.getName();
+            if (winner != null) {
+                return "Game is won by " + winner.getName();
+            } else {
+                return "Draw";
+            }
         }
-        Player p = (currPlayer == 1) ? p1 : p2;
-        if (p.equals(step.p)) {
+        Player player = (currPlayer == 1) ? p1 : p2;
+        if (player.equals(step.player)) {
             if (board.makeTurn(step.x, step.y, currPlayer)) {
                 if (checkWinner()) {
-                    winner = p;
+                    winner = player;
+                    currPlayer = 0;
                     return winner.getName() + " won";
+                } else if (board.isFull()) {
+                    currPlayer = 0;
+                    winner = null;
+                    return "Draw";
                 } else {
-                    currPlayer = currPlayer * (-1);
+                    currPlayer *= -1;
                     return "Turn was made";
                 }
+
             } else {
                 return "Wrong turn";
             }
         } else {
             return "Wrong player tried to make turn";
         }
+
     }
 
     @NotNull
@@ -67,30 +78,23 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @NotNull
     @Override
-    public String getMessage(@NotNull Player p) {
-        if (currPlayer == 0) {
-            return p.getName() + " won";
-        }
-        if (p.equals(p1)) {
-            if (currPlayer == 1) {
-                return "Make your turn";
-            }
-        }
-        if (p.equals(p2)) {
-// todo:
-        }
-        return null;
+    public String getMessage(@NotNull Player player) {
+        return getInfo(player);
     }
 
-    public String getInfo(Player p) {
-        if (p.equals(p1) || p.equals(p2)) {
+    private String getInfo(Player player) {
+        if (player.equals(p1) || player.equals(p2)) {
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {
                 sb.append("Current player: ");
                 sb.append(currPlayer == 1 ? p1.getName() : p2.getName());
             } else {
-                sb.append("Winner: ");
-                sb.append(winner.getName());
+                if (winner != null) {
+                    sb.append("Winner: ");
+                    sb.append(winner.getName());
+                } else {
+                    sb.append("Draw");
+                }
             }
             sb.append('\n');
             sb.append(board.toString());
@@ -102,7 +106,13 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @Override
     public void surrender(@NotNull Player player) {
-        //todo: write smth
+        if (player.equals(p1)) {
+            winner = p2;
+            currPlayer = 0;
+        } else if (player.equals(p2)) {
+            winner = p1;
+            currPlayer = 0;
+        }
     }
 
     @NotNull
@@ -127,7 +137,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @Override
     public boolean isFinished() {
-        return currPlayer == 0;
+        return currPlayer == 0 || board.isFull();
     }
 }
 

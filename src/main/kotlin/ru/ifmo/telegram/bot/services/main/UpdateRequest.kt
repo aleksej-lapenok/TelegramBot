@@ -1,107 +1,142 @@
 package ru.ifmo.telegram.bot.services.main
 
-import com.sun.jmx.remote.internal.ArrayQueue
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
+import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
+import ru.ifmo.telegram.bot.services.telegramApi.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
-import java.io.BufferedReader
-import java.io.BufferedWriter
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
 
 @Service
-class UpdateRequest(@Value("\${bot-token}") val token: String,
-                    val updatesCollector: UpdatesCollector,
-                    val playerRepository: PlayerRepository,
-                    val mainGameFactory: MainGameFactory) {
+class UpdateRequest(
+        val updatesCollector: UpdatesCollector,
+        val playerRepository: PlayerRepository,
+        val mainGameFactory: MainGameFactory,
+        val telegramSender: TelegramSender) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private var lastUpdate = 0L
-    private val games = mutableMapOf<Long, Game<*>>()
-    private val query = Games.values().toMutableList().map { it.name to ArrayQueue<Long>(5) }.toMap()
+    private val games = mutableMapOf<Player, Game<*>>()
+    private val query = Games.values().toMutableList().map { it.name to mutableSetOf<Player>() }.toMap()
 
     @Scheduled(fixedDelay = 1000)
     fun getUpdates() {
-        val ts = TelegramSender(token)
-        val response = ts.getUpdates(lastUpdate + 1)
+        val response = telegramSender.getUpdates(lastUpdate + 1)
         val result = updatesCollector.getUpdates(response)
-        if (true) {
-            lastUpdate = result.maxBy { it.update_id }?.update_id ?: lastUpdate
-            for (update in result) {
-                logger.info(update.data)
-                if (update.data=="/start") {
-                    if (playerRepository.findByChatId(update.chatId) == null) {
-                        playerRepository.save(Player(name = update.name!!, chatId = update.chatId))
-                    }
-                    val player = playerRepository.findByChatId(update.chatId)
-                    val text = player!!.name + " lalka"
-                    ts.sendMessage(player.chatId, text)
-                    ts.getUpdates()
-                }
-                if (update.data.contentEquals("/game")) {
-                    if (games[update.chatId] != null) {
-                        logger.info("You should surrender previouse game, before start new")
-                        continue
-                    }
-                    val name = update.data.split(" ")[1]
-                    if (!query.containsKey(name)) {
-                        logger.info("UnKnown game")
-                        continue
-                    }
-                    val factory = mainGameFactory.getGameFactory(name)
-                    if (query[name]?.size!! + 1 >= factory!!.minNumberPlayers()) {
-                        val playes = query[name]!!.toMutableList()
-                        query[name]!!.clear()
-                        playes.add(update.chatId)
-                        val game = factory.getGame(*playes.map { playerRepository.findByChatId(it)!! }.toTypedArray())
-                        playes.forEach {
-                            games.put(it, game)
-                            logger.info("start game for $it")
-                        }
-                    } else {
-                        query[name]!!.add(update.chatId)
-                    }
-                }
-                if (update.data.contentEquals("/surrender")) {
-                    if (games[update.chatId] == null) {
-                        logger.info("You should start game")
-                        continue
-                    }
-
-                }
+        lastUpdate = result.maxBy { it.update_id }?.update_id ?: lastUpdate
+        for (update in result) {
+            val player = getOrCreatePlayer(update)
+            logger.info(update.data)
+            if (update.data.startsWith("/start")) {
+                val text = player.name + " registered"
+                sendToPlayer(player, text)
+                continue
             }
-        } else
-            logger.warn(response)
-    }
-
-    fun sendPostHttpRequest(url: String, data: String): String {
-        with(URL(url).openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-
-            BufferedWriter(OutputStreamWriter(outputStream)).use {
-                it.write(data)
-            }
-
-            logger.info("Response code: $responseCode")
-
-            BufferedReader(InputStreamReader(inputStream)).use {
-                val response = StringBuffer()
-                var line: String? = ""
-                while (line != null) {
-                    response.append(line)
-                    line = it.readLine()
+            if (update.data.startsWith("/game")) {
+                var game = getGameByPlayer(player)
+                if (game != null) {
+                    sendToPlayer(player, "You should finish previous game, before start new")
+                    continue
                 }
-                return response.toString()
+                val name = update.data.split(" ")[1]
+                if (!query.containsKey(name)) {
+                    logger.info("UnKnown game")
+                    continue
+                }
+
+                addPlayerInQuery(player, name)
+                game = tryToGetNewGame(name)
+                if (game == null) {
+                    sendToPlayer(player, "waiting other playes")
+                } else {
+                    game.getPlayes().forEach {
+                        sendToPlayer(it, game.getMessage(it))
+                    }
+                }
+                continue
             }
+            if (update.data.startsWith("/surrender")) {
+                val game = getGameByPlayer(player)
+                if (game == null) {
+                    sendToPlayer(player, "You should start game before you surrender")
+                    continue
+                }
+                game.surrender(player)
+                sendToPlayer(player, "You left this game")
+                game.getPlayes().forEach {
+                    sendToPlayer(it, game.getMessage(it))
+                }
+                removePlayerFromGame(player)
+                continue
+            }
+            if (update.data.startsWith("/turn")) {
+                val game = getGameByPlayer(player)
+                if (game == null) {
+                    sendToPlayer(player, "You should start game")
+                    continue
+                }
+                val stepFactory = mainGameFactory.getStepFactory(game.getGameId())!!
+                val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
+                sendToPlayer(player, (game as Game<Step>).step(step as Step))
+                game.getPlayes()
+                        .forEach { sendToPlayer(it, game.getMessage(it)) }
+                if (game.isFinished()) {
+                    game.getPlayes().forEach {
+                        sendToPlayer(it, "game finished")
+                        removePlayerFromGame(player)
+                    }
+                }
+                continue
+            }
+            if (update.data.startsWith("/help")) {
+                sendToPlayer(player, "/game <nameGame> to start game\n" +
+                        "/turn <arguments of turn> to make turn \n" +
+                        "/surrender to exit from game")
+                sendToPlayer(player, "Game names: ${Games.values().map { it.name }}")
+                continue
+            }
+            sendToPlayer(player, "Unknown command: ${update.data}")
         }
     }
+
+    fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
+
+    fun addPlayerInGame(player: Player, game: Game<*>) {
+        games[player] = game
+    }
+
+    fun tryToGetNewGame(name: String): Game<*>? {
+        val factory = mainGameFactory.getGameFactory(name)
+        return if (query[name]?.size!! >= factory!!.minNumberPlayers()) {
+            val playes = query[name]!!.toMutableList()
+            query[name]!!.clear()
+            val game = factory.getGame(*playes.toTypedArray())
+            playes.forEach {
+                addPlayerInGame(it, game)
+            }
+            game
+        } else {
+            null
+        }
+    }
+
+    fun getOrCreatePlayer(update: Update): Player {
+        var player = playerRepository.findByChatId(update.chatId)
+        if (player == null) {
+            player = Player(name = update.name, chatId = update.chatId)
+            player = playerRepository.save(player)
+        }
+        return player!!
+    }
+
+    fun getGameByPlayer(player: Player) = games[player]
+
+    fun removePlayerFromGame(player: Player) = games.remove(player)
+
+    fun addPlayerInQuery(player: Player, games: String) = query[games]!!.add(player)
 
 }
