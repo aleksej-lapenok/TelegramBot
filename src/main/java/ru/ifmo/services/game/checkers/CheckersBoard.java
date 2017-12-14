@@ -111,9 +111,9 @@ public class CheckersBoard {
     }
 
     CheckersBoard() {
-        tiles = new ArrayList<>(3);
-        for (int i = 0; i < 3; i++) {
-            tiles.add(Arrays.stream(new CheckersTile[3]).map(it -> new CheckersTile()).collect(Collectors.toList()));
+        tiles = new ArrayList<>(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            tiles.add(Arrays.stream(new CheckersTile[SIZE]).map(it -> new CheckersTile()).collect(Collectors.toList()));
         }
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
