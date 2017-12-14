@@ -1,7 +1,7 @@
 package ru.ifmo.telegram.bot.services.game
 
 import ru.ifmo.telegram.bot.entity.Player
-import java.awt.image.BufferedImage
+import ru.ifmo.telegram.bot.services.main.Games
 
 /**
  *
@@ -23,14 +23,23 @@ interface Game<in T : Step> {
     fun getMessage(player: Player): String
 
     /**
-     * finish game
+     * surrender game
      */
-    fun finish()
+    fun surrender(player: Player)
 
     /**
      * return json of game
      */
     fun toJson(): String
+
+    /**
+     * return playes in game
+     */
+    fun getPlayes(): List<Player>
+
+    fun getGameId(): Games
+
+    fun isFinished(): Boolean
 }
 
 
