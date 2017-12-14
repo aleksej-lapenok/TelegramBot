@@ -1,10 +1,9 @@
 package ru.ifmo.services.game.tictactoe;
 
-import ru.ifmo.telegram.bot.entity.Player;
-import ru.ifmo.telegram.bot.services.game.Game;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Cawa on 02.12.2017.
@@ -14,25 +13,19 @@ public class Board {
     private List<List<Tile>> tiles;
 
     boolean makeTurn(int x, int y, int sign) {
-        if ((x < 1) || (x > 3) || (y < 1) || (y > 3)) {
-            return false;
-        }
-        return tiles.get(x - 1).get(y - 1).makeTurn(sign);
+        return (x >= 1) && (x <= 3) && (y >= 1) && (y <= 3) &&
+                tiles.get(y - 1).get(x - 1).makeTurn(sign);
     }
 
     void clear() {
-        for (List<Tile> list:tiles) {
-            for (Tile tile : list) {
-                tile.clear();
-            }
-        }
+        tiles.forEach(it -> it.forEach(Tile::clear));
     }
 
     boolean hasThreeInARow() {
         // lines
         for (int i = 0; i < 3; i++) {
             Tile t = tiles.get(0).get(i);
-            boolean found = true;
+            boolean found = !t.toString().equals("*");
             for (int j = 1; j < 3; j++) {
                 found &= t.equals(tiles.get(j).get(i));
             }
@@ -43,7 +36,7 @@ public class Board {
         // rows
         for (int i = 0; i < 3; i++) {
             Tile t = tiles.get(i).get(0);
-            boolean found = true;
+            boolean found = !t.toString().equals("*");
             for (int j = 1; j < 3; j++) {
                 found &= t.equals(tiles.get(i).get(j));
             }
@@ -53,19 +46,14 @@ public class Board {
         }
         // diag
         Tile t = tiles.get(1).get(1);
-        if (t.equals(tiles.get(0).get(0)) && t.equals(tiles.get(2).get(2))) {
-            return true;
-        }
-        if (t.equals(tiles.get(0).get(2)) && t.equals(tiles.get(2).get(0))) {
-            return true;
-        }
-        return false;
+        return t.equals(tiles.get(0).get(0)) && t.equals(tiles.get(2).get(2)) && !t.toString().equals("*") ||
+                t.equals(tiles.get(0).get(2)) && t.equals(tiles.get(2).get(0)) && !t.toString().equals("*");
     }
 
     Board() {
         tiles = new ArrayList<>(3);
         for (int i = 0; i < 3; i++) {
-            tiles.add(new ArrayList<>(3));
+            tiles.add(Arrays.stream(new Tile[3]).map(it -> new Tile()).collect(Collectors.toList()));
         }
     }
 
@@ -79,5 +67,16 @@ public class Board {
             sb.append('\n');
         }
         return sb.toString();
+    }
+
+    boolean isFull() {
+        for (List<Tile> line : tiles) {
+            for (Tile tile : line) {
+                if (tile.toString().equals("*")) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

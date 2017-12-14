@@ -1,10 +1,10 @@
 package ru.ifmo.services.game.tictactoe;
 
 import org.jetbrains.annotations.NotNull;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.GameFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Service
 public class TTTGameFactory implements GameFactory<TTTStep, TicTacToeGame<TTTStep>> {
@@ -34,7 +34,8 @@ public class TTTGameFactory implements GameFactory<TTTStep, TicTacToeGame<TTTSte
     @NotNull
     @Override
     public TicTacToeGame<TTTStep> fromJson(@NotNull String json) {
-        return null;
+        throw new NotImplementedException();
+//        return null;
         //todo: write this method
     }
 }
