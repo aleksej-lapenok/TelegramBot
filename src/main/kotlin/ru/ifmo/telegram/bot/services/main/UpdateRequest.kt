@@ -76,25 +76,24 @@ class UpdateRequest(
                 continue
             }
             if (update.data.startsWith("/turn")) {
-                if (games[update.chatId] == null) {
-                    logger.info("You should start game")
+                val game = getGameByPlayer(player)
+                if (game == null) {
+                    sendToPlayer(player, "You should start game")
                     continue
                 }
-                val game = games[update.chatId]!!
-                val player = playerRepository.findByChatId(update.chatId)!!
                 val stepFactory = mainGameFactory.getStepFactory(game.getGameId())!!
                 val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
-                telegramSender.sendMessage(update.chatId, (game as Game<Step>).step(step as Step))
+                sendToPlayer(player, (game as Game<Step>).step(step as Step))
                 game.getPlayes()
-                        .forEach { telegramSender.sendMessage(it.chatId, game.getMessage(it)) }
+                        .forEach { sendToPlayer(it, game.getMessage(it)) }
                 continue
             }
             if (update.data.startsWith("/help")) {
-                telegramSender.sendMessage(update.chatId, "Use commands: /game <nameGame> to start game\n /turn <arguments of turn> to make turn \n /surrender to exit from game")
-                telegramSender.sendMessage(update.chatId, "Game names: ${Games.values().map { it.name }}")
+                sendToPlayer(player, "Use commands: /game <nameGame> to start game\n /turn <arguments of turn> to make turn \n /surrender to exit from game")
+                sendToPlayer(player, "Game names: ${Games.values().map { it.name }}")
                 continue
             }
-            telegramSender.sendMessage(update.chatId, "Unknown command: ${update.data}")
+            sendToPlayer(player, "Unknown command: ${update.data}")
         }
     }
 
