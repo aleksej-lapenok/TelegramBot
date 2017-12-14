@@ -3,6 +3,7 @@ package ru.ifmo.services.game.checkers;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.GameFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class CheckersGameFactory implements GameFactory<CheckersStep, CheckersGame<CheckersStep>> {
     @Override
@@ -31,6 +32,6 @@ public class CheckersGameFactory implements GameFactory<CheckersStep, CheckersGa
     @NotNull
     @Override
     public CheckersGame<CheckersStep> fromJson(@NotNull String json) {
-        return null;
+        throw new NotImplementedException();
     }
 }
