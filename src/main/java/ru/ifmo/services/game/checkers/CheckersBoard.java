@@ -3,7 +3,9 @@ package ru.ifmo.services.game.checkers;
 import ru.ifmo.services.game.checkers.CheckersUtils.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CheckersBoard {
     public int whiteCount = 12;
@@ -109,9 +111,9 @@ public class CheckersBoard {
     }
 
     CheckersBoard() {
-        tiles = new ArrayList<>(SIZE);
-        for (int i = 0; i < SIZE; i++) {
-            tiles.add(new ArrayList<>(SIZE));
+        tiles = new ArrayList<>(3);
+        for (int i = 0; i < 3; i++) {
+            tiles.add(Arrays.stream(new CheckersTile[3]).map(it -> new CheckersTile()).collect(Collectors.toList()));
         }
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
