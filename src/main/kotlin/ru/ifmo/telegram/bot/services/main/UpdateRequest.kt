@@ -52,7 +52,6 @@ class UpdateRequest(
                 if (query[name]?.size!! >= factory!!.minNumberPlayers()) {
                     val playes = query[name]!!.toMutableList()
                     query[name]!!.clear()
-                    playes.add(update.chatId)
                     val game = factory.getGame(*playes.map { playerRepository.findByChatId(it)!! }.toTypedArray())
                     playes.forEach {
                         games.put(it, game)
@@ -63,7 +62,7 @@ class UpdateRequest(
                     telegramSender.sendMessage(update.chatId, "waiting other playes")
                 }
             }
-            if (update.data.startsWith("/finish")) {
+            if (update.data.startsWith("/surrender")) {
                 if (games[update.chatId] == null) {
                     logger.info("You should start game")
                     continue
@@ -72,8 +71,9 @@ class UpdateRequest(
                 val player = playerRepository.findByChatId(chatId = update.chatId)!!
                 games[update.chatId]!!.surrender(player)
                 telegramSender.sendMessage(update.chatId, "You left this game")
-                telegramSender.sendMessage(update.chatId, games[update.chatId]!!.getMessage(player))
-
+                for (p in game.getPlayes()) {
+                    telegramSender.sendMessage(p.chatId, games[update.chatId]!!.getMessage(p))
+                }
                 games.remove(update.chatId)
             }
         }
