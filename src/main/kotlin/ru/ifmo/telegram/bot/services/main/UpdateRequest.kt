@@ -1,6 +1,5 @@
 package ru.ifmo.telegram.bot.services.main
 
-import com.google.gson.JsonParser
 import com.sun.jmx.remote.internal.ArrayQueue
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -9,13 +8,14 @@ import org.springframework.stereotype.Service
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
-import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
-import java.io.*
+import java.io.BufferedReader
+import java.io.BufferedWriter
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
-import java.nio.charset.Charset
 
 @Service
 class UpdateRequest(@Value("\${bot-token}") val token: String,
@@ -48,7 +48,7 @@ class UpdateRequest(@Value("\${bot-token}") val token: String,
                 }
                 if (update.data.contentEquals("/game")) {
                     if (games[update.chatId] != null) {
-                        logger.info("You should finish previouse game, before start new")
+                        logger.info("You should surrender previouse game, before start new")
                         continue
                     }
                     val name = update.data.split(" ")[1]
@@ -70,7 +70,7 @@ class UpdateRequest(@Value("\${bot-token}") val token: String,
                         query[name]!!.add(update.chatId)
                     }
                 }
-                if (update.data.contentEquals("/finish")) {
+                if (update.data.contentEquals("/surrender")) {
                     if (games[update.chatId] == null) {
                         logger.info("You should start game")
                         continue

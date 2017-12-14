@@ -3,7 +3,9 @@ package ru.ifmo.services.game.tictactoe;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
-import ru.ifmo.telegram.bot.services.game.Step;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Cawa on 02.12.2017.
@@ -98,7 +100,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
     }
 
     @Override
-    public void finish(@NotNull Player player) {
+    public void surrender(@NotNull Player player) {
         //todo: write smth
     }
 
@@ -108,6 +110,12 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
         // just part of db system, I will make issue for it
         return "";
         // todo: write this method
+    }
+
+    @NotNull
+    @Override
+    public List<Player> getPlayes() {
+        return Arrays.asList(p1, p2);
     }
 }
 
