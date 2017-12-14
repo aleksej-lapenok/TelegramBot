@@ -35,7 +35,7 @@ class UpdateRequest(
                 val player = playerRepository.findByChatId(update.chatId)
                 val text = player!!.name + " registered"
                 telegramSender.sendMessage(player.chatId, text)
-//                    telegramSender.getUpdates()
+                continue
             }
             if (update.data.startsWith("/game")) {
                 if (games[update.chatId] != null) {
@@ -61,10 +61,12 @@ class UpdateRequest(
                 } else {
                     telegramSender.sendMessage(update.chatId, "waiting other playes")
                 }
+                continue
             }
             if (update.data.startsWith("/surrender")) {
                 if (games[update.chatId] == null) {
                     logger.info("You should start game")
+                    telegramSender.sendMessage(update.chatId, "You should start game before you surrender")
                     continue
                 }
                 val game = games[update.chatId]!!
@@ -75,7 +77,19 @@ class UpdateRequest(
                     telegramSender.sendMessage(p.chatId, games[update.chatId]!!.getMessage(p))
                 }
                 games.remove(update.chatId)
+                continue
             }
+            if (update.data.startsWith("/step")) {
+                if (games[update.chatId] == null) {
+                    logger.info("You should start game")
+                    continue
+                }
+                val game = games[update.chatId]!!
+                val player = playerRepository.findByChatId(update.chatId)
+
+                continue
+            }
+            telegramSender.sendMessage(update.chatId, "Unknown command: ${update.data}")
         }
     }
 

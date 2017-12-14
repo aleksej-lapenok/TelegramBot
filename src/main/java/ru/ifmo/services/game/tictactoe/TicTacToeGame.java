@@ -47,7 +47,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                     winner = p;
                     return winner.getName() + " won";
                 } else {
-                    currPlayer = currPlayer * (-1);
+                    currPlayer *= -1;
                     return "Turn was made";
                 }
             } else {
