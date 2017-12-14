@@ -72,10 +72,10 @@ class UpdateRequest(
                 }
                 val game = games[update.chatId]!!
                 val player = playerRepository.findByChatId(chatId = update.chatId)!!
-                games[update.chatId]!!.surrender(player)
+                game.surrender(player)
                 telegramSender.sendMessage(update.chatId, "You left this game")
                 for (p in game.getPlayes()) {
-                    telegramSender.sendMessage(p.chatId, games[update.chatId]!!.getMessage(p))
+                    telegramSender.sendMessage(p.chatId, game.getMessage(p))
                 }
                 games.remove(update.chatId)
                 continue
@@ -93,6 +93,10 @@ class UpdateRequest(
                 game.getPlayes()
                         .forEach { telegramSender.sendMessage(it.chatId, game.getMessage(it)) }
                 continue
+            }
+            if (update.data.startsWith("/help")) {
+                telegramSender.sendMessage(update.chatId, "Use commands: /game <nameGame> to start game\n /turn <arguments of turn> to make turn \n /surrender to exit from game")
+                telegramSender.sendMessage(update.chatId, "Game names: ${Games.values().map { it.name }}")
             }
             telegramSender.sendMessage(update.chatId, "Unknown command: ${update.data}")
         }
