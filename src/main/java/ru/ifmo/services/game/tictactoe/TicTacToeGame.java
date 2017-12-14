@@ -39,16 +39,17 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     @NotNull
     public String step(@NotNull S step) {
         if (currPlayer == 0) {
-            if (winner != null)
+            if (winner != null) {
                 return "Game is won by " + winner.getName();
-            else
+            } else {
                 return "Draw";
+            }
         }
-        Player p = (currPlayer == 1) ? p1 : p2;
-        if (p.equals(step.p)) {
+        Player player = (currPlayer == 1) ? p1 : p2;
+        if (player.equals(step.player)) {
             if (board.makeTurn(step.x, step.y, currPlayer)) {
                 if (checkWinner()) {
-                    winner = p;
+                    winner = player;
                     currPlayer = 0;
                     return winner.getName() + " won";
                 } else if (board.isFull()) {
@@ -77,12 +78,12 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @NotNull
     @Override
-    public String getMessage(@NotNull Player p) {
-        return getInfo(p);
+    public String getMessage(@NotNull Player player) {
+        return getInfo(player);
     }
 
-    private String getInfo(Player p) {
-        if (p.equals(p1) || p.equals(p2)) {
+    private String getInfo(Player player) {
+        if (player.equals(p1) || player.equals(p2)) {
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {
                 sb.append("Current player: ");
@@ -91,7 +92,9 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                 if (winner != null) {
                     sb.append("Winner: ");
                     sb.append(winner.getName());
-                } else sb.append("Draw");
+                } else {
+                    sb.append("Draw");
+                }
             }
             sb.append('\n');
             sb.append(board.toString());

@@ -8,16 +8,16 @@ import ru.ifmo.telegram.bot.services.game.Step;
  * Created by Cawa on 02.12.2017.
  */
 public class TTTStep implements Step {
-    Player p;
+    Player player;
     int x, y;
 
-//    TTTStep(Player p, int x, int y) {
-//        this.p = p;
+//    TTTStep(Player player, int x, int y) {
+//        this.player = player;
 //        this.x = x;
 //        this.y = y;
 //    }
 
-    TTTStep(Player p, String data) {
+    TTTStep(Player player, String data) {
         String[] s = data.split(" ");
         if (s.length == 2) {
             x = s[0].charAt(0) - '0';
@@ -26,19 +26,19 @@ public class TTTStep implements Step {
             x = 0;
             y = 0;
         }
-        this.p = p;
+        this.player = player;
     }
 
     @NotNull
     @Override
     public Player getPlayer() {
-        return p;
+        return player;
     }
 
     @Override
     public String toString() {
         return "Player " +
-                p.getName() +
+                player.getName() +
                 "\nMakes turn on " +
                 Integer.toString(x) +
                 ' ' +

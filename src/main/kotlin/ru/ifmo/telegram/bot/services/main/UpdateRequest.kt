@@ -93,7 +93,9 @@ class UpdateRequest(
                 continue
             }
             if (update.data.startsWith("/help")) {
-                sendToPlayer(player, "Use commands: /game <nameGame> to start game\n /turn <arguments of turn> to make turn \n /surrender to exit from game")
+                sendToPlayer(player, "/game <nameGame> to start game\n" +
+                        "/turn <arguments of turn> to make turn \n" +
+                        "/surrender to exit from game")
                 sendToPlayer(player, "Game names: ${Games.values().map { it.name }}")
                 continue
             }
