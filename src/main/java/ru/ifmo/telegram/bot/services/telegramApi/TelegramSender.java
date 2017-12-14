@@ -1,15 +1,17 @@
 package ru.ifmo.telegram.bot.services.telegramApi;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.*;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,9 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@Service
 public class TelegramSender {
 
-    public TelegramSender(String token) {
+    public TelegramSender(@Value("${bot-token}") String token) {
         this.token = token;
     }
 

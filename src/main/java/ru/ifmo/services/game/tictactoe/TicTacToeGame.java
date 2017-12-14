@@ -3,12 +3,11 @@ package ru.ifmo.services.game.tictactoe;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
-import ru.ifmo.telegram.bot.services.game.Step;
 
 /**
  * Created by Cawa on 02.12.2017.
  */
-public class TicTacToeGame<S extends TTTStep> implements Game<S>{
+public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     private Player p1, p2;
     private Board board;
     private int currPlayer;
@@ -66,14 +65,21 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
     @Override
     public String getMessage(@NotNull Player p) {
         if (currPlayer == 0) {
-            return p.getName() + " won";
+            return winner.getName() + " won";
         }
         if (p.equals(p1)) {
             if (currPlayer == 1) {
                 return "Make your turn";
+            } else {
+                return "Wait for opponent's turn";
             }
         }
-        if (p.equals(p2))  {
+        if (p.equals(p2)) {
+            if (currPlayer == -1) {
+                return "Make your turn";
+            } else {
+                return "Wait for opponent's turn";
+            }
 // todo:
         }
         return null;
@@ -84,7 +90,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {
                 sb.append("Current player: ");
-                sb.append(currPlayer == 1 ? p1.getName(): p2.getName());
+                sb.append(currPlayer == 1 ? p1.getName() : p2.getName());
             } else {
                 sb.append("Winner: ");
                 sb.append(winner.getName());
@@ -99,7 +105,13 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
 
     @Override
     public void finish(@NotNull Player player) {
-        //todo: write smth
+        if (player.equals(p1)) {
+            winner = p2;
+            currPlayer = 0;
+        } else if (player.equals(p2)) {
+            winner = p1;
+            currPlayer = 0;
+        }
     }
 
     @NotNull
