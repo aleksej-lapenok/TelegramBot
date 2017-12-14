@@ -6,17 +6,17 @@ import ru.ifmo.services.game.tictactoe.TTTStepFactory
 
 @Service
 class MainGameFactory {
-    val gameFactoris = mutableMapOf(Pair(Games.TTT, TTTGameFactory()))
+    val gameFactories = mutableMapOf(Pair(Games.TTT, TTTGameFactory()))
 
     fun getGameFactory(name: String) = getGameFactory(Games.valueOf(name))
 
-    fun getGameFactory(games: Games) = gameFactoris[games]
+    fun getGameFactory(games: Games) = gameFactories[games]
 
-    val stepFactoris = mutableMapOf(Pair(Games.TTT, TTTStepFactory()))
+    val stepFactories = mutableMapOf(Pair(Games.TTT, TTTStepFactory()))
 
     fun getStepFactory(name: String) = getStepFactory(Games.valueOf(name))
 
-    fun getStepFactory(games: Games) = stepFactoris[games]
+    fun getStepFactory(games: Games) = stepFactories[games]
 }
 
 enum class Games {
