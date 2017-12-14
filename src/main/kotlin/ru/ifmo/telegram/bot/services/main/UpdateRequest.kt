@@ -20,7 +20,7 @@ class UpdateRequest(
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private var lastUpdate = 0L
-    private val games = mutableMapOf<Long, Game<*>>()
+    private val games = mutableMapOf<Player, Game<*>>()
     private val query = Games.values().toMutableList().map { it.name to mutableSetOf<Player>() }.toMap()
 
     @Scheduled(fixedDelay = 1000)
@@ -37,10 +37,9 @@ class UpdateRequest(
                 continue
             }
             if (update.data.startsWith("/game")) {
-
                 var game = getGameByPlayer(player)
                 if (game != null) {
-                    sendToPlayer(player, "You should finish previouse game, before start new")
+                    sendToPlayer(player, "You should finish previous game, before start new")
                     continue
                 }
                 val name = update.data.split(" ")[1]
@@ -72,7 +71,7 @@ class UpdateRequest(
                 game.getPlayes().forEach {
                     sendToPlayer(it, game.getMessage(it))
                 }
-                games.remove(update.chatId)
+                removePlayerFromGame(player)
                 continue
             }
             if (update.data.startsWith("/turn")) {
@@ -86,6 +85,12 @@ class UpdateRequest(
                 sendToPlayer(player, (game as Game<Step>).step(step as Step))
                 game.getPlayes()
                         .forEach { sendToPlayer(it, game.getMessage(it)) }
+                if (game.isFinished()) {
+                    game.getPlayes().forEach {
+                        sendToPlayer(it, "game finished")
+                        removePlayerFromGame(player)
+                    }
+                }
                 continue
             }
             if (update.data.startsWith("/help")) {
@@ -100,7 +105,7 @@ class UpdateRequest(
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
-        games[player.chatId!!] = game
+        games[player] = game
     }
 
     fun tryToGetNewGame(name: String): Game<*>? {
@@ -127,7 +132,9 @@ class UpdateRequest(
         return player!!
     }
 
-    fun getGameByPlayer(player: Player) = games[player.chatId]
+    fun getGameByPlayer(player: Player) = games[player]
+
+    fun removePlayerFromGame(player: Player) = games.remove(player)
 
     fun addPlayerInQuery(player: Player, games: String) = query[games]!!.add(player)
 

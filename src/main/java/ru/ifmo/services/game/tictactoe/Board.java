@@ -78,4 +78,15 @@ public class Board {
         }
         return sb.toString();
     }
+
+    public boolean isFull() {
+        for (List<Tile> line : tiles) {
+            for (Tile tile : line) {
+                if (tile.toString().equals("*")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }

@@ -39,24 +39,34 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     @NotNull
     public String step(@NotNull S step) {
         if (currPlayer == 0) {
-            return "Game is won by " + winner.getName();
+            if (winner != null)
+                return "Game is won by " + winner.getName();
+            else
+                return "Draw";
         }
         Player p = (currPlayer == 1) ? p1 : p2;
         if (p.equals(step.p)) {
             if (board.makeTurn(step.x, step.y, currPlayer)) {
                 if (checkWinner()) {
                     winner = p;
+                    currPlayer = 0;
                     return winner.getName() + " won";
+                } else if (board.isFull()) {
+                    currPlayer = 0;
+                    winner = null;
+                    return "Draw";
                 } else {
                     currPlayer *= -1;
                     return "Turn was made";
                 }
+
             } else {
                 return "Wrong turn";
             }
         } else {
             return "Wrong player tried to make turn";
         }
+
     }
 
     @NotNull
@@ -78,8 +88,10 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                 sb.append("Current player: ");
                 sb.append(currPlayer == 1 ? p1.getName() : p2.getName());
             } else {
-                sb.append("Winner: ");
-                sb.append(winner.getName());
+                if (winner != null) {
+                    sb.append("Winner: ");
+                    sb.append(winner.getName());
+                } else sb.append("Draw");
             }
             sb.append('\n');
             sb.append(board.toString());
@@ -122,7 +134,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @Override
     public boolean isFinished() {
-        return currPlayer == 0;
+        return currPlayer == 0 || board.isFull();
     }
 }
 
