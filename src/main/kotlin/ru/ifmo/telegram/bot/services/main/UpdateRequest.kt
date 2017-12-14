@@ -57,7 +57,6 @@ class UpdateRequest(
                         sendToPlayer(it, game.getMessage(it))
                     }
                 }
-
                 continue
             }
             if (update.data.startsWith("/surrender")) {

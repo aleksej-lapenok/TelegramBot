@@ -3,6 +3,7 @@ package ru.ifmo.services.game.tictactoe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Cawa on 02.12.2017.
@@ -63,7 +64,7 @@ public class Board {
     Board() {
         tiles = new ArrayList<>(3);
         for (int i = 0; i < 3; i++) {
-            tiles.add(Arrays.asList(new Tile(), new Tile(), new Tile()));
+            tiles.add(Arrays.stream(new Tile[3]).map(it -> new Tile()).collect(Collectors.toList()));
         }
     }
 
