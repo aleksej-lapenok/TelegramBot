@@ -37,6 +37,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
             if (board.makeTurn(step.x1 - 1, step.y1 - 1, step.x2 - 1, step.y2 - 1, currPlayer)) {
                 if (checkWinner()) {
                     winner = player;
+                    currPlayer = 0;
                     return winner.getName() + " won";
                 } else {
                     currPlayer *= -1;
@@ -59,20 +60,25 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @NotNull
     @Override
     public String getMessage(@NotNull Player player) {
-        if (currPlayer == 0) {
-            return player.getName() + " won";
-        }
-        if (player.equals(player1)) {
-            if (currPlayer == 1) {
-                return "Make your turn, " + player1.getName();
+        if (player.equals(player1) || player.equals(player2)) {
+            StringBuilder sb = new StringBuilder();
+            if (currPlayer != 0) {
+                sb.append("Current player: ");
+                sb.append(currPlayer == 1 ? player1.getName() : player2.getName());
+            } else {
+                if (winner != null) {
+                    sb.append("Winner: ");
+                    sb.append(winner.getName());
+                } else {
+                    sb.append("Draw");
+                }
             }
+            sb.append('\n');
+            sb.append(board.toString());
+            return sb.toString();
+        } else {
+            return "Wrong player";
         }
-        if (player.equals(player2)) {
-            if (currPlayer == -1) {
-                return "Make your turn, " + player2.getName();
-            }
-        }
-        return "";
     }
 
     @NotNull

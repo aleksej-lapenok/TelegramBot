@@ -34,6 +34,9 @@ public class CheckersBoard {
                             || tiles.get(x).get(y).getChecker() == Checker.BLACK_QUEEN) {
                         tiles.get(x).get(y).setChecker(Checker.NONE);
                         blackCount--;
+                        if (x2 == SIZE - 1) {
+                            checker = Checker.WHITE_QUEEN;
+                        }
                         break;
                     } else {
                         return false;
@@ -54,6 +57,9 @@ public class CheckersBoard {
                             || tiles.get(x).get(y).getChecker() == Checker.WHITE_QUEEN) {
                         tiles.get(x).get(y).setChecker(Checker.NONE);
                         whiteCount--;
+                        if (x2 == 0) {
+                            checker = Checker.BLACK_QUEEN;
+                        }
                         break;
                     } else {
                         return false;
@@ -70,7 +76,7 @@ public class CheckersBoard {
                 if (Math.abs(x2 - x1) != Math.abs(y2 - y1)) {
                     return false;
                 }
-                int up = x1 > x2 ? 1 : -1;
+                int up = x1 < x2 ? 1 : -1;
                 int right = y2 > y1 ? 1 : -1;
                 for (int i = x1, j = y1; i != x2; i += up, j += right) {
                     if (!tiles.get(i).get(j).isFree()
@@ -87,11 +93,11 @@ public class CheckersBoard {
                 if (Math.abs(x1 - x2) != Math.abs(y2 - y1)) {
                     return false;
                 }
-                int down = x1 < x2 ? 1 : -1;
+                int down = x1 > x2 ? 1 : -1;
                 int left = y2 < y1 ? 1 : -1;
-                for (int i = x1, j = y1; i != x2; i += down, j += left) {
+                for (int i = x1, j = y1; i != x2; i -= down, j -= left) {
                     if (!tiles.get(i).get(j).isFree()
-                            && tiles.get(i + down).get(j + left).isFree()) {
+                            && tiles.get(i - down).get(j - left).isFree()) {
                         if (tiles.get(i).get(j).getChecker() == Checker.WHITE_SIMPLE
                                 || tiles.get(i).get(j).getChecker() == Checker.WHITE_QUEEN) {
                             tiles.get(i).get(j).setChecker(Checker.NONE);
