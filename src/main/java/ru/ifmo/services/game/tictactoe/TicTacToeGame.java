@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by Cawa on 02.12.2017.
  */
-public class TicTacToeGame<S extends TTTStep> implements Game<S>{
+public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     private Player p1, p2;
     private Board board;
     private int currPlayer;
@@ -76,7 +76,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
                 return "Make your turn";
             }
         }
-        if (p.equals(p2))  {
+        if (p.equals(p2)) {
 // todo:
         }
         return null;
@@ -87,7 +87,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {
                 sb.append("Current player: ");
-                sb.append(currPlayer == 1 ? p1.getName(): p2.getName());
+                sb.append(currPlayer == 1 ? p1.getName() : p2.getName());
             } else {
                 sb.append("Winner: ");
                 sb.append(winner.getName());
@@ -123,6 +123,11 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S>{
     @Override
     public Games getGameId() {
         return Games.TTT;
+    }
+
+    @Override
+    public boolean isFinished() {
+        return currPlayer == 0;
     }
 }
 
