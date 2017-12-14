@@ -10,11 +10,9 @@ import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
 import ru.ifmo.telegram.bot.services.game.Step
+import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
-import java.io.BufferedReader
-import java.io.BufferedWriter
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
+import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.Charset
@@ -32,19 +30,21 @@ class UpdateRequest(@Value("\${bot-token}") val token: String,
 
     @Scheduled(fixedDelay = 1000)
     fun getUpdates() {
-        val parser = JsonParser()
-
-        val response = parser.parse(URL("https://api.telegram.org/bot$token/getupdates?offset=${lastUpdate + 1}").readText(Charset.defaultCharset()))
-                .takeIf { it.isJsonObject }?.asJsonObject ?: throw Exception()
-        val ok = response["ok"]?.takeIf { it.isJsonPrimitive }?.asBoolean ?: throw Exception()
-        if (ok) {
-            val result = updatesCollector.getUpdates(response["result"]?.asJsonArray)
+        val ts = TelegramSender(token)
+        val response = ts.getUpdates(lastUpdate + 1)
+        val result = updatesCollector.getUpdates(response)
+        if (true) {
             lastUpdate = result.maxBy { it.update_id }?.update_id ?: lastUpdate
             for (update in result) {
-                if (update.data == "/start") {
+                logger.info(update.data)
+                if (update.data=="/start") {
                     if (playerRepository.findByChatId(update.chatId) == null) {
                         playerRepository.save(Player(name = update.name!!, chatId = update.chatId))
                     }
+                    val player = playerRepository.findByChatId(update.chatId)
+                    val text = player!!.name + " lalka"
+                    ts.sendMessage(player.chatId, text)
+                    ts.getUpdates()
                 }
                 if (update.data.contentEquals("/game")) {
                     if (games[update.chatId] != null) {
@@ -79,7 +79,7 @@ class UpdateRequest(@Value("\${bot-token}") val token: String,
                 }
             }
         } else
-            logger.warn(response.asString)
+            logger.warn(response)
     }
 
     fun sendPostHttpRequest(url: String, data: String): String {

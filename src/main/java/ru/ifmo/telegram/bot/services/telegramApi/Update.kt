@@ -14,5 +14,5 @@ data class Update(
 
 enum class TypeUpdate {
     MESSAGE,
-    CALLBACK_QUEARY
+    CALLBACK_QUERY
 }
