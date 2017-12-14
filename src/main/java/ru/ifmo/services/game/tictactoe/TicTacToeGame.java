@@ -119,6 +119,11 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     public Games getGameId() {
         return Games.TTT;
     }
+
+    @Override
+    public boolean isFinished() {
+        return currPlayer == 0;
+    }
 }
 
 

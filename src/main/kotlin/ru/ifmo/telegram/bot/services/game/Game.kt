@@ -38,6 +38,8 @@ interface Game<in T : Step> {
     fun getPlayes(): List<Player>
 
     fun getGameId(): Games
+
+    fun isFinished(): Boolean
 }
 
 
