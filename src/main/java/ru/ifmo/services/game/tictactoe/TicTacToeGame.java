@@ -24,12 +24,12 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         board = new Board();
     }
 
-    TicTacToeGame(Player player1, Player player2, boolean startWithFirst) {
-        p1 = player1;
-        p2 = player2;
-        currPlayer = startWithFirst ? 1 : -1;
-        board = new Board();
-    }
+//    TicTacToeGame(Player player1, Player player2, boolean startWithFirst) {
+//        p1 = player1;
+//        p2 = player2;
+//        currPlayer = startWithFirst ? 1 : -1;
+//        board = new Board();
+//    }
 
     private boolean checkWinner() {
         return board.hasThreeInARow();
@@ -81,7 +81,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         return getInfo(p);
     }
 
-    public String getInfo(Player p) {
+    private String getInfo(Player p) {
         if (p.equals(p1) || p.equals(p2)) {
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {

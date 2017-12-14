@@ -11,11 +11,11 @@ public class TTTStep implements Step {
     Player p;
     int x, y;
 
-    TTTStep(Player p, int x, int y) {
-        this.p = p;
-        this.x = x;
-        this.y = y;
-    }
+//    TTTStep(Player p, int x, int y) {
+//        this.p = p;
+//        this.x = x;
+//        this.y = y;
+//    }
 
     TTTStep(Player p, String data) {
         String[] s = data.split(" ");

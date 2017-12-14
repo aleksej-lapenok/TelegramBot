@@ -13,18 +13,12 @@ public class Board {
     private List<List<Tile>> tiles;
 
     boolean makeTurn(int x, int y, int sign) {
-        if ((x < 1) || (x > 3) || (y < 1) || (y > 3)) {
-            return false;
-        }
-        return tiles.get(y - 1).get(x - 1).makeTurn(sign);
+        return (x >= 1) && (x <= 3) && (y >= 1) && (y <= 3) &&
+                tiles.get(y - 1).get(x - 1).makeTurn(sign);
     }
 
     void clear() {
-        for (List<Tile> list:tiles) {
-            for (Tile tile : list) {
-                tile.clear();
-            }
-        }
+        tiles.forEach(it -> it.forEach(Tile::clear));
     }
 
     boolean hasThreeInARow() {
@@ -52,13 +46,8 @@ public class Board {
         }
         // diag
         Tile t = tiles.get(1).get(1);
-        if (t.equals(tiles.get(0).get(0)) && t.equals(tiles.get(2).get(2)) && !t.toString().equals("*")) {
-            return true;
-        }
-        if (t.equals(tiles.get(0).get(2)) && t.equals(tiles.get(2).get(0)) && !t.toString().equals("*")) {
-            return true;
-        }
-        return false;
+        return t.equals(tiles.get(0).get(0)) && t.equals(tiles.get(2).get(2)) && !t.toString().equals("*") ||
+                t.equals(tiles.get(0).get(2)) && t.equals(tiles.get(2).get(0)) && !t.toString().equals("*");
     }
 
     Board() {
@@ -80,7 +69,7 @@ public class Board {
         return sb.toString();
     }
 
-    public boolean isFull() {
+    boolean isFull() {
         for (List<Tile> line : tiles) {
             for (Tile tile : line) {
                 if (tile.toString().equals("*")) {

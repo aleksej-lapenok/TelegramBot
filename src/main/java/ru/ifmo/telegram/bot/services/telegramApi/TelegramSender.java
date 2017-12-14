@@ -42,14 +42,13 @@ public class TelegramSender {
     public String sendMessage(Long id, String text) throws TgException {
         logger.info("Sending: " + text + ", to " + id.toString());
         try {
-            List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+            List<NameValuePair> nvps = new ArrayList<>();
             nvps.add(new BasicNameValuePair("chat_id", id.toString()));
             nvps.add(new BasicNameValuePair("text", text));
             CloseableHttpResponse response2 = sendRequest("sendMessage", nvps);
             InputStream tmp = response2.getEntity().getContent();
-            String result = IOUtils.toString(tmp, "UTF-8");
             // logger.info(result);
-            return result;
+            return IOUtils.toString(tmp, "UTF-8");
         } catch (Exception e){
             logger.info(e.getMessage());
             throw new TgException("Error on sendMessage occured.", e);
@@ -59,22 +58,17 @@ public class TelegramSender {
     public String getUpdates(Long offset) throws TgException{
         logger.info("Getting updates from offset = " + offset.toString());
         try {
-            List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+            List<NameValuePair> nvps = new ArrayList<>();
             nvps.add(new BasicNameValuePair("offset", offset.toString()));
             CloseableHttpResponse response2 = sendRequest("getUpdates", nvps);
             // logger.info(response2.toString());
             InputStream tmp = response2.getEntity().getContent();
-            String result = IOUtils.toString(tmp, "UTF-8");
             // logger.info(result);
-            return result;
+            return IOUtils.toString(tmp, "UTF-8");
         } catch (Exception e){
             throw new TgException("Error on get Updates occured.", e);
             //Deprecated
             //httpClient.getConnectionManager().shutdown();
         }
-    }
-
-    public String getUpdates() throws TgException {
-        return getUpdates(0L);
     }
 }
