@@ -3,6 +3,10 @@ package ru.ifmo.services.game.checkers;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
+import ru.ifmo.telegram.bot.services.main.Games;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class CheckersGame<S extends CheckersStep> implements Game<S> {
     private Player player1, player2;
@@ -29,13 +33,12 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         }
         Player player = (currPlayer == 1) ? player1 : player2;
         if (player.equals(step.player)) {
-            if (board.makeTurn(step.x1, step.y1, step.x2, step.y2, currPlayer)) {
+            if (board.makeTurn(step.x1 - 1, step.y1 - 1, step.x2 - 1, step.y2 - 1, currPlayer)) {
                 if (checkWinner()) {
                     winner = player;
-                    currPlayer = 0;
                     return winner.getName() + " won";
                 } else {
-                    currPlayer = currPlayer * (-1);
+                    currPlayer *= -1;
                     return "Turn was made";
                 }
             } else {
@@ -71,14 +74,31 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         return "";
     }
 
+    @NotNull
     @Override
-    public void finish() {
+    public String toJson() {
+        return null;
+    }
+
+    @Override
+    public void surrender(@NotNull Player player) {
 
     }
 
     @NotNull
     @Override
-    public String toJson() {
-        return "{}";
+    public List<Player> getPlayes() {
+        return Arrays.asList(player1, player2);
+    }
+
+    @NotNull
+    @Override
+    public Games getGameId() {
+        return Games.CHECKERS;
+    }
+
+    @Override
+    public boolean isFinished() {
+        return currPlayer == 0;
     }
 }

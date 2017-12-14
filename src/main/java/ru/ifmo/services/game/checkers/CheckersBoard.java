@@ -65,13 +65,37 @@ public class CheckersBoard {
                 }
                 break;
             case WHITE_QUEEN:
-                if (x2 - x1 != Math.abs(y2 - y1)) {
+                if (Math.abs(x2 - x1) != Math.abs(y2 - y1)) {
                     return false;
+                }
+                int up = x1 > x2 ? 1 : -1;
+                int right = y2 > y1 ? 1 : -1;
+                for (int i = x1, j = y1; i != x2; i += up, j += right) {
+                    if (!tiles.get(i).get(j).isFree()
+                            && tiles.get(i + up).get(j + right).isFree()) {
+                        if (tiles.get(i).get(j).getChecker() == Checker.BLACK_SIMPLE
+                                || tiles.get(i).get(j).getChecker() == Checker.BLACK_QUEEN) {
+                            tiles.get(i).get(j).setChecker(Checker.NONE);
+                            blackCount--;
+                        }
+                    }
                 }
                 break;
             case BLACK_QUEEN:
-                if (x1 - x2 != Math.abs(y2 - y1)) {
+                if (Math.abs(x1 - x2) != Math.abs(y2 - y1)) {
                     return false;
+                }
+                int down = x1 < x2 ? 1 : -1;
+                int left = y2 < y1 ? 1 : -1;
+                for (int i = x1, j = y1; i != x2; i += down, j += left) {
+                    if (!tiles.get(i).get(j).isFree()
+                            && tiles.get(i + down).get(j + left).isFree()) {
+                        if (tiles.get(i).get(j).getChecker() == Checker.WHITE_SIMPLE
+                                || tiles.get(i).get(j).getChecker() == Checker.WHITE_QUEEN) {
+                            tiles.get(i).get(j).setChecker(Checker.NONE);
+                            whiteCount--;
+                        }
+                    }
                 }
                 break;
         }

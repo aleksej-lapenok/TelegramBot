@@ -23,5 +23,6 @@ class MainStepFactory {
 }
 
 enum class Games {
-    TTT
+    TTT,
+    CHECKERS
 }
