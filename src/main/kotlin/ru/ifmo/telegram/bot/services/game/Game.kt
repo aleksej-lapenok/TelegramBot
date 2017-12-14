@@ -1,6 +1,7 @@
 package ru.ifmo.telegram.bot.services.game
 
 import ru.ifmo.telegram.bot.entity.Player
+import ru.ifmo.telegram.bot.services.main.Games
 
 /**
  *
@@ -35,6 +36,8 @@ interface Game<in T : Step> {
      * return playes in game
      */
     fun getPlayes(): List<Player>
+
+    fun getGameId(): Games
 }
 
 

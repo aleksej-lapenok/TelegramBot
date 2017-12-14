@@ -3,6 +3,7 @@ package ru.ifmo.services.game.tictactoe;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
+import ru.ifmo.telegram.bot.services.main.Games;
 
 import java.util.Arrays;
 import java.util.List;
@@ -129,6 +130,12 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     @Override
     public List<Player> getPlayes() {
         return Arrays.asList(p1, p2);
+    }
+
+    @NotNull
+    @Override
+    public Games getGameId() {
+        return Games.TTT;
     }
 }
 
