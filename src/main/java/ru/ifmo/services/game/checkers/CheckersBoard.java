@@ -105,11 +105,7 @@ public class CheckersBoard {
     }
 
     void clear() {
-        for (List<CheckersTile> list : tiles) {
-            for (CheckersTile tile : list) {
-                tile.clear();
-            }
-        }
+        tiles.forEach(it -> it.forEach(CheckersTile::clear));
     }
 
     CheckersBoard() {
