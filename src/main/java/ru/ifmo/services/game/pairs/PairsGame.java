@@ -1,5 +1,6 @@
 package ru.ifmo.services.game.pairs;
 
+import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
@@ -28,36 +29,36 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
 
     @NotNull
     @Override
-    public String step(@NotNull S step) {
+    public Pair<String, Boolean> step(@NotNull S step) {
         if (step.x == 0) {
             board.notSelectAll();
-            return "Choose new pair";
+            return new Pair<>("Choose new pair", true);
         }
         if (!player.equals(step.player)) {
-            return "Wrong player tried to make turn";
+            return new Pair<>("Wrong player tried to make turn", false);
         }
         if (isPlayerSurrender) {
-            return "You're surrender";
+            return new Pair<>("You're surrender", false);
         }
         if (isFirstCard) {
             if (board.select(step.x - 1, step.y - 1)) {
                 this.firstCardX = step.x;
                 this.firstCardY = step.y;
                 isFirstCard = false;
-                return "Select pair";
+                return new Pair<>("Select pair", false);
             } else {
-                return "Wrong select!!!";
+                return new Pair<>("Wrong select!!!", false);
             }
         }
         isFirstCard = true;
         if (board.makeTurn(firstCardX - 1, firstCardY - 1, step.x - 1, step.y - 1)) {
             if (isFinished()) {
-                return player.getName() + " won";
+                return new Pair<>(player.getName() + " won", false);
             } else {
-                return "Turn was made";
+                return new Pair<>("Turn was made", true);
             }
         } else {
-            return "Wrong turn";
+            return new Pair<>("Wrong turn", false);
         }
     }
 
@@ -68,7 +69,6 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
     }
 
     @NotNull
-    @Override
     public String getMessage(@NotNull Player player) {
         if (player.equals(this.player)) {
             StringBuilder sb = new StringBuilder();
@@ -86,7 +86,6 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
     }
 
     @NotNull
-    @Override
     public Keyboard getKeyboard(@NotNull Player player) {
         return board.getKeyboard();
     }
