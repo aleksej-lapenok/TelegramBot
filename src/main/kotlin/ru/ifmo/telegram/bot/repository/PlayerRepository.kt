@@ -7,4 +7,5 @@ import ru.ifmo.telegram.bot.entity.Player
 @Repository
 interface PlayerRepository : CrudRepository<Player, Long> {
     fun findByChatId(chatId:Long):Player?
+    fun findByName(name: String): Player?
 }
