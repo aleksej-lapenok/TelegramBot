@@ -7,16 +7,16 @@ public class Button {
     String data;
     String name;
 
-    public Button(String t, String d) {
-        type = t;
-        data = d;
+    public Button(String type, String data) {
+        this.type = type;
+        this.data = data;
         name = "0";
     }
 
-    public Button(String t, String d, String n) {
-        type = t;
-        data = d;
-        name = n;
+    public Button(String type, String data, String name) {
+        this.type = type;
+        this.data = data;
+        this.name = name;
     }
 
     @Override
