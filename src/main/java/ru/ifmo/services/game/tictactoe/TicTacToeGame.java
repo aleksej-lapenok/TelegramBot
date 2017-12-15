@@ -10,12 +10,12 @@ import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
+import java.awt.image.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -110,12 +110,18 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     }
 
 
-    @Override
-    public RenderedImage drawPicture(@NotNull Player player) throws IOException {
+    private RenderedImage drawPicture(Player player) throws TgException{
         String picture = board.toString();
-        Image crossImage = ImageIO.read(new File(PICTURES_DIRECTORY, "krest.png"));
-        Image zeroImage = ImageIO.read(new File(PICTURES_DIRECTORY, "nol.png"));
-        Image fieldImage = ImageIO.read(new File(PICTURES_DIRECTORY, "pole.png"));
+        Image crossImage = null;
+        Image zeroImage = null;
+        Image fieldImage = null;
+        try {
+            crossImage = ImageIO.read(new File(PICTURES_DIRECTORY, "krest.png"));
+            zeroImage = ImageIO.read(new File(PICTURES_DIRECTORY, "nol.png"));
+            fieldImage = ImageIO.read(new File(PICTURES_DIRECTORY, "pole.png"));
+        } catch (IOException e) {
+            throw new TgException("Need game resourses", e);
+        }
         BufferedImage image = new BufferedImage(90, 90, BufferedImage.TYPE_INT_ARGB);
         String b[] = picture.split("\\n");
         char a[] = new char[9];
@@ -139,8 +145,10 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @NotNull
     @Override
-    public GameUpdate getGameUpdate(@NotNull Player player) {
-        File f = drawPicture(player);
+    public GameUpdate getGameUpdate(@NotNull Player player) throws TgException {
+        Raster raster = drawPicture(player).getData();
+        DataBufferByte data  = (DataBufferByte) raster.getDataBuffer();
+        byte[] f = data.getData();
         switch (state) {
             case TURN:
                 if (currPlayer == player) {
