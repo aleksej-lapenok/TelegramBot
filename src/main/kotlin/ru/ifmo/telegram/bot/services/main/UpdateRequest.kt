@@ -93,7 +93,7 @@ class UpdateRequest(
                 }
                 val stepFactory = mainGameFactory.getStepFactory(game.getGameId())!!
                 val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
-                sendToPlayer(player, (game as Game<Step>).step(step))
+                sendToPlayer(player, (game as Game<Step>).step(step).first)
                 game.getPlayes()
                         .forEach {
                             if (game.isCurrent(it)) {

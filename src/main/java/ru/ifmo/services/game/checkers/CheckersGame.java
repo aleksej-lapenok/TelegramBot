@@ -1,5 +1,6 @@
 package ru.ifmo.services.game.checkers;
 
+import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
@@ -31,9 +32,13 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         return board.blackCount == 0 || board.whiteCount == 0;
     }
 
-    @NotNull
     @Override
-    public String step(@NotNull S step) {
+    @NotNull
+    public Pair<String, Boolean> step(@NotNull S step) {
+        return new Pair<String, Boolean>(step1(step), Boolean.TRUE);
+    }
+
+    public String step1(@NotNull S step) {
         if (currPlayer == 0) {
             return "Game is won by " + winner.getName();
         }
