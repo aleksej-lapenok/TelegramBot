@@ -1,11 +1,14 @@
 package ru.ifmo.services.game.checkers;
 
 import org.jetbrains.annotations.NotNull;
+import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,12 +52,6 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         } else {
             return "Wrong player tried to make turn";
         }
-    }
-
-    @NotNull
-    @Override
-    public Byte[] drawPicture(@NotNull Player player) {
-        return new Byte[0];
     }
 
     @NotNull
@@ -113,5 +110,28 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @Override
     public boolean isFinished() {
         return currPlayer == 0;
+    }
+
+    @NotNull
+    @Override
+    public Keyboard getKeyboard(@NotNull Player player) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public GameUpdate getGameUpdate(@NotNull Player player) {
+        return null;
+    }
+
+    @Override
+    public boolean isCurrent(@NotNull Player player) {
+        return false;
+    }
+
+    @NotNull
+    @Override
+    public File drawPicture(@NotNull Player player) {
+        return null;
     }
 }
