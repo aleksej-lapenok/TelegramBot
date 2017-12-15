@@ -33,7 +33,7 @@ public class PairsBoard {
     }
 
     public boolean select(int x, int y) {
-        if (!tiles.get(x).get(y).isOpen() && !tiles.get(x).get(y).isSelect()) {
+        if (!tiles.get(x).get(y).isOpen()) {
             tiles.get(x).get(y).revertSelect();
             tiles.get(x).get(y).open();
             return true;
@@ -42,7 +42,7 @@ public class PairsBoard {
     }
 
     public boolean makeTurn(int x1, int y1, int x2, int y2) {
-        if (tiles.get(x2).get(2).isOpen() || tiles.get(x2).get(y2).isSelect()) {
+        if (tiles.get(x2).get(y2).isOpen()) {
             tiles.get(x1).get(y1).revertSelect();
             tiles.get(x1).get(y1).close();
             return false;
