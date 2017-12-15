@@ -32,7 +32,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         board = new Board();
     }
 
-    TicTacToeGame(String jsonString, Player player1, Player player2) throws GameException{
+    TicTacToeGame(String jsonString, Player player1, Player player2) throws GameException {
         JsonParser parser = new JsonParser();
         JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
         state = GameState.valueOf(gameJson.get("state").getAsString());
