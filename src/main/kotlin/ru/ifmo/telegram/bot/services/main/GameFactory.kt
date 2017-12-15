@@ -11,13 +11,16 @@ import ru.ifmo.telegram.bot.services.game.StepFactory
 @Service
 class MainGameFactory {
     val gameFactories = mutableMapOf<Games, GameFactory<*, *>>(Pair(Games.TTT, TTTGameFactory()),
-            Pair(Games.CHECKERS, CheckersGameFactory()))
+            Pair(Games.CHECKERS, CheckersGameFactory()),
+            Pair(Games.PAIRS, CheckersGameFactory()))
 
     fun getGameFactory(name: String) = getGameFactory(Games.valueOf(name))
 
     fun getGameFactory(games: Games) = gameFactories[games]
 
-    val stepFactories = mutableMapOf<Games, StepFactory<*>>(Pair(Games.TTT, TTTStepFactory()), Pair(Games.CHECKERS, CheckersStepFactory()))
+    val stepFactories = mutableMapOf<Games, StepFactory<*>>(Pair(Games.TTT, TTTStepFactory()),
+            Pair(Games.CHECKERS, CheckersStepFactory()),
+            Pair(Games.PAIRS, CheckersStepFactory()))
 
     fun getStepFactory(name: String) = getStepFactory(Games.valueOf(name))
 
@@ -26,5 +29,6 @@ class MainGameFactory {
 
 enum class Games {
     TTT,
-    CHECKERS
+    CHECKERS,
+    PAIRS
 }
