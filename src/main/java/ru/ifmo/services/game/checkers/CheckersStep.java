@@ -10,7 +10,7 @@ public class CheckersStep implements Step {
 
     CheckersStep(Player player, String data) {
         String[] s = data.split(" ");
-        if (s.length == 4) {
+        if (s.length == 2) {
             x = s[0].charAt(0) - '0';
             y = s[1].charAt(0) - '0';
         } else {
