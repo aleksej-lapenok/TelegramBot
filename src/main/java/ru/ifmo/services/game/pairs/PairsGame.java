@@ -9,7 +9,7 @@ import ru.ifmo.telegram.bot.services.main.Games;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class PairsGame<S extends PairsStep> implements Game<S> {
@@ -110,7 +110,7 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
     @NotNull
     @Override
     public List<Player> getPlayes() {
-        return Arrays.asList(player);
+        return Collections.singletonList(player);
     }
 
     @NotNull
