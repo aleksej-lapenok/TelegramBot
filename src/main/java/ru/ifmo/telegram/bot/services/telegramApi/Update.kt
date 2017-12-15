@@ -10,7 +10,8 @@ data class Update(
         var name: String?=null,
         var chatId: Long,
         var userId: Long,
-        var update_id: Long)
+        var update_id: Long,
+        var message_id: Long)
 
 enum class TypeUpdate {
     MESSAGE,

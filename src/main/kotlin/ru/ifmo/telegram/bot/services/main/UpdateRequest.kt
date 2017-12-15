@@ -8,6 +8,7 @@ import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
 import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
+import ru.ifmo.telegram.bot.services.telegramApi.TypeUpdate
 import ru.ifmo.telegram.bot.services.telegramApi.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
@@ -39,6 +40,9 @@ class UpdateRequest(
             if (update.data.startsWith("/skip")) {
                 continue
             }
+            if (update.type == TypeUpdate.CALLBACK_QUERY) {
+                telegramSender.hideKeyboard(update)
+            }
             if (update.data.startsWith("/start")) {
                 val text = player.name + " registered"
                 sendToPlayer(player, text)
@@ -50,7 +54,8 @@ class UpdateRequest(
                     sendToPlayer(player, "You should finish previous game, before start new")
                     continue
                 }
-                val name = update.data.split(" ")[1]
+                val name = update.data.split(" ")[1].toUpperCase()
+
                 try {
                     Games.valueOf(name)
                 } catch (e: IllegalArgumentException) {
@@ -61,7 +66,7 @@ class UpdateRequest(
                 addPlayerInQuery(player, name)
                 game = tryToGetNewGame(name)
                 if (game == null) {
-                    sendToPlayer(player, "waiting other playes")
+                    sendToPlayer(player, "waiting other players")
                 } else {
                     game.getPlayes().forEach {
                         if (game.isCurrent(it)) {
