@@ -11,6 +11,7 @@ import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
 import ru.ifmo.telegram.bot.services.telegramApi.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
+import java.io.File
 
 @Service
 class UpdateRequest(
@@ -31,6 +32,7 @@ class UpdateRequest(
         lastUpdate = result.maxBy { it.update_id }?.update_id ?: lastUpdate
         for (update in result) {
             val player = getOrCreatePlayer(update)
+            // sendFileToPlayer(player, File("pic.png"))
             logger.info(update.data)
             if (update.data.startsWith("/start")) {
                 val text = player.name + " registered"
@@ -56,7 +58,7 @@ class UpdateRequest(
                 } else {
                     game.getPlayes().forEach {
                         if (game.isCurrent(it)) {
-                            sendToPlayer(it, game.getMessage(it), game.getKeyboard())
+                            sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
                         } else {
                             sendToPlayer(it, game.getMessage(it))
                         }
@@ -90,7 +92,7 @@ class UpdateRequest(
                 game.getPlayes()
                         .forEach {
                             if (game.isCurrent(it)) {
-                                sendToPlayer(it, game.getMessage(it), game.getKeyboard())
+                                sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
                             } else {
                                 sendToPlayer(it, game.getMessage(it))
                             } }
@@ -115,6 +117,7 @@ class UpdateRequest(
 
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
     fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
+    fun sendFileToPlayer(player: Player, file: File) = telegramSender.sendPicture(player.chatId, file)!!
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
         games[player] = game
