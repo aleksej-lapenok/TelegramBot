@@ -1,50 +1,69 @@
 package ru.ifmo.services.game.tictactoe;
 
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Contract;
 
 /**
  * Created by Cawa on 02.12.2017.
  */
 public class Tile {
-    private Integer state;
+
+    private TileState state;
 
     Tile() {
-        state = 0;
+        state = TileState.EMPTY;
+    }
+
+    Tile(JsonObject jsonObject) {
+        state = TileState.valueOf(jsonObject.get("state").getAsString());
     }
 
     @Contract(pure = true)
     boolean isFree() {
-        return 0 == state;
+        return state == TileState.EMPTY;
     }
 
     void clear() {
-        state = 0;
+        state = TileState.EMPTY;
     }
 
-    boolean makeTurn(int i) {
+    boolean makeTurn(TileState newState) {
         if (!isFree()) {
             return false;
         }
-        if (i > 0) {
-            state = 1;
-        } else {
-            state = -1;
-        }
+        state = newState;
         return true;
     }
 
     @Override
     public String toString() {
         switch (state) {
-            case -1:
+            case ZERO:
                 return "0";
-            case 1:
+            case MARK:
                 return "x";
+            case EMPTY:
+                return "*";
+            default:
+                return "_";
         }
-        return "*";
     }
 
     boolean equals(Tile obj) {
         return state.equals(obj.state);
     }
+
+    enum TileState {
+        EMPTY,
+        ZERO,
+        MARK
+    }
+
+    public JsonObject toJson() {
+        JsonObject object = new JsonObject();
+        object.addProperty("state", state.toString());
+        return object;
+    }
+
 }
+

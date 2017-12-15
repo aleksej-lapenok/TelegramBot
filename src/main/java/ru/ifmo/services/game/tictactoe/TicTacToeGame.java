@@ -1,5 +1,8 @@
 package ru.ifmo.services.game.tictactoe;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
@@ -15,62 +18,80 @@ import java.util.List;
  * Created by Cawa on 02.12.2017.
  */
 public class TicTacToeGame<S extends TTTStep> implements Game<S> {
-    private Player p1, p2;
+    private Player p1, p2, currPlayer;
     private Board board;
-    private int currPlayer;
-    private Player winner;
+    private GameState state;
 
     TicTacToeGame(Player player1, Player player2) {
         p1 = player1;
         p2 = player2;
-        currPlayer = 1;
+        currPlayer = p1;
+        state = GameState.TURN;
         board = new Board();
     }
 
-//    TicTacToeGame(Player player1, Player player2, boolean startWithFirst) {
-//        p1 = player1;
-//        p2 = player2;
-//        currPlayer = startWithFirst ? 1 : -1;
-//        board = new Board();
-//    }
+    TicTacToeGame(String jsonString) {
+        JsonParser parser = new JsonParser();
+        JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
+        state = GameState.valueOf(gameJson.get("state").getAsString());
+        board = new Board(gameJson.get("board").getAsJsonObject());
+        // TODO: players from json
+        p1 = null;
+        p2 = null;
+        currPlayer = null;
+    }
+
+    public JsonObject toJsonObject() {
+        JsonObject object = new JsonObject();
+        object.add("board", board.toJson());
+        object.addProperty("state", state.toString());
+        // TODO: players to json
+//        object.addProperty("p1", p1.toString());
+//        object.addProperty("p2", p2.toString());
+//        object.addProperty("currPlayer", currPlayer.toString());
+        return object;
+    }
 
     private boolean checkWinner() {
         return board.hasThreeInARow();
     }
 
+    @Contract(pure = true)
+    private Tile.TileState getState(Player p) {
+        return p == p1 ? Tile.TileState.MARK : p == p2 ? Tile.TileState.ZERO : Tile.TileState.EMPTY;
+    }
+
     @Override
     @NotNull
     public String step(@NotNull S step) {
-        if (currPlayer == 0) {
-            if (winner != null) {
-                return "Game is won by " + winner.getName();
-            } else {
-                return "Draw";
-            }
-        }
-        Player player = (currPlayer == 1) ? p1 : p2;
-        if (player.equals(step.player)) {
-            if (board.makeTurn(step.x, step.y, currPlayer)) {
-                if (checkWinner()) {
-                    winner = player;
-                    currPlayer = 0;
-                    return winner.getName() + " won";
-                } else if (board.isFull()) {
-                    currPlayer = 0;
-                    winner = null;
-                    return "Draw";
-                } else {
-                    currPlayer *= -1;
-                    return "Turn was made";
+        switch (state) {
+            case TURN:
+                if (currPlayer == step.player) {
+                    Tile.TileState tileState = getState(step.player);
+                    if (tileState != Tile.TileState.EMPTY) {
+                        if (board.makeTurn(step.x, step.y, tileState)) {
+                            if (checkWinner()) {
+                                state = GameState.WINNER;
+                                return "You won.";
+                            }
+                            if (board.isFull()) {
+                                state = GameState.DRAW;
+                                return "You made draw.";
+                            }
+                            currPlayer = currPlayer == p1 ? p2 : p1;
+                        }
+                        return "You tried to make wrong turn, try again.";
+                    }
+                    return "It is not your game, you can't make turns.";
                 }
-
-            } else {
-                return "Wrong turn";
-            }
-        } else {
-            return "Wrong player tried to make turn";
+                return "It is not your turn. Wait.";
+            case WINNER:
+                return "You can't make turns, this game has won by " + currPlayer.getName() + ".";
+            case DRAW:
+                return "You can't make turns, there is a draw.";
+            default:
+                return "Chuck?!?!?!";
         }
-
     }
 
     @NotNull
@@ -79,16 +100,30 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         return board.getKeyboard();
     }
 
-    @NotNull
+
     @Override
     public File drawPicture(@NotNull Player player) {
-        return new File("");
+        return null;
     }
 
     @NotNull
     @Override
     public GameUpdate getGameUpdate(@NotNull Player player) {
-        return new GameUpdate(getMessage(player), getKeyboard(player), drawPicture(player));
+        File f = drawPicture(player);
+        switch (state) {
+            case TURN:
+                if (currPlayer == player) {
+                    return new GameUpdate("Make your turn.\n" + board.toString(), board.getKeyboard(), f);
+                } else {
+                    return new GameUpdate("Wait for opponent's turn.\n" + board.toString(), new Keyboard(), f);
+                }
+            case WINNER:
+                return new GameUpdate("The game has won by " + currPlayer.getName() + "." + board.toString(), board.getKeyboard(), f);
+            case DRAW:
+                return new GameUpdate("There is a draw." + board.toString(), board.getKeyboard(), f);
+            default:
+                return new GameUpdate("Chuck?!?!?!" + board.toString(), board.getKeyboard(), f);
+        }
     }
 
     @NotNull
@@ -98,44 +133,23 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     }
 
     private String getInfo(Player player) {
-        if (player.equals(p1) || player.equals(p2)) {
-            StringBuilder sb = new StringBuilder();
-            if (currPlayer != 0) {
-                sb.append("Current player: ");
-                sb.append(currPlayer == 1 ? p1.getName() : p2.getName());
-            } else {
-                if (winner != null) {
-                    sb.append("Winner: ");
-                    sb.append(winner.getName());
-                } else {
-                    sb.append("Draw");
-                }
-            }
-            sb.append('\n');
-            sb.append(board.toString());
-            return sb.toString();
-        } else {
-            return "Wrong player";
-        }
+        return getGameUpdate(player).getText();
     }
 
     @Override
     public void surrender(@NotNull Player player) {
-        if (player.equals(p1)) {
-            winner = p2;
-            currPlayer = 0;
-        } else if (player.equals(p2)) {
-            winner = p1;
-            currPlayer = 0;
+        if (state == GameState.TURN) {
+            if (p1 == player || p2 == player) {
+                currPlayer = player == p1 ? p2 : p1;
+                state = GameState.WINNER;
+            }
         }
     }
 
     @NotNull
     @Override
     public String toJson() {
-        // just part of db system, I will make issue for it
-        return "";
-        // todo: write this method
+        return toJsonObject().toString();
     }
 
     @NotNull
@@ -152,11 +166,17 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @Override
     public boolean isFinished() {
-        return currPlayer == 0 || board.isFull();
+        return state != GameState.TURN;
     }
 
     public boolean isCurrent(Player p) {
-        return (p1.equals(p) && currPlayer > 0) || (p2.equals(p) && currPlayer < 0);
+        return p == currPlayer;
+    }
+
+    enum GameState {
+        DRAW,
+        TURN,
+        WINNER
     }
 }
 

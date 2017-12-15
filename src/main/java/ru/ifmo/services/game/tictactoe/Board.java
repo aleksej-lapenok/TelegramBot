@@ -1,5 +1,8 @@
 package ru.ifmo.services.game.tictactoe;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
@@ -16,9 +19,9 @@ public class Board {
     private List<List<Tile>> tiles;
     private final int SIZE = 3;
 
-    boolean makeTurn(int x, int y, int sign) {
-        return (x > 0) && (x <= SIZE) && (y > 0) && (y <= SIZE) &&
-                tiles.get(y - 1).get(x - 1).makeTurn(sign);
+    boolean makeTurn(int row, int line, Tile.TileState state) {
+        return (row > 0) && (row <= SIZE) && (line > 0) && (line <= SIZE) &&
+                tiles.get(line - 1).get(row - 1).makeTurn(state);
     }
 
     void clear() {
@@ -27,13 +30,13 @@ public class Board {
 
     Keyboard getKeyboard() {
         Keyboard keyboard = new Keyboard();
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < SIZE; j++) {
+        for (int row = 0; row < SIZE; row++) {
+            for (int line = 0; line < SIZE; line++) {
                 String data = "/skip";
-                if (tiles.get(i).get(j).isFree()) {
-                    data = "/turn " + (j + 1) + " " + (i + 1);
+                if (tiles.get(line).get(row).isFree()) {
+                    data = "/turn " + (row + 1) + " " + (line + 1);
                 }
-                keyboard.addButton(new Button("callback_data", data, tiles.get(i).get(j).toString()));
+                keyboard.addButton(new Button("callback_data", data, tiles.get(line).get(row).toString()));
             }
             keyboard.addRow();
         }
@@ -41,38 +44,42 @@ public class Board {
     }
 
     boolean hasThreeInARow() {
-        // lines
-        for (int i = 0; i < SIZE; i++) {
-            Tile t = tiles.get(0).get(i);
-            boolean found = !t.toString().equals("*");
-            for (int j = 1; j < SIZE; j++) {
-                found &= t.equals(tiles.get(j).get(i));
-            }
-            if (found) {
+        // rows
+        for (int row = 0; row < SIZE; row++) {
+            Tile t = tiles.get(0).get(row);
+            if (!t.isFree() && t.equals(tiles.get(1).get(row)) && t.equals(tiles.get(2).get(row))) {
                 return true;
             }
         }
-        // rows
-        for (int i = 0; i < SIZE; i++) {
-            Tile t = tiles.get(i).get(0);
-            boolean found = !t.toString().equals("*");
-            for (int j = 1; j < SIZE; j++) {
-                found &= t.equals(tiles.get(i).get(j));
-            }
-            if (found) {
+        // lines
+        for (int line = 0; line < SIZE; line++) {
+            Tile t = tiles.get(line).get(0);
+            if (!t.isFree() && t.equals(tiles.get(line).get(1)) && t.equals(tiles.get(line).get(2))) {
                 return true;
             }
         }
         // diag
         Tile t = tiles.get(1).get(1);
-        return t.equals(tiles.get(0).get(0)) && t.equals(tiles.get(2).get(2)) && !t.toString().equals("*") ||
-                t.equals(tiles.get(0).get(2)) && t.equals(tiles.get(2).get(0)) && !t.toString().equals("*");
+        return !t.isFree() && (
+                t.equals(tiles.get(0).get(0)) && t.equals(tiles.get(2).get(2)) ||
+                t.equals(tiles.get(0).get(2)) && t.equals(tiles.get(2).get(0)));
     }
 
     Board() {
         tiles = new ArrayList<>(SIZE);
         for (int i = 0; i < SIZE; i++) {
             tiles.add(Arrays.stream(new Tile[SIZE]).map(it -> new Tile()).collect(Collectors.toList()));
+        }
+    }
+
+    Board(JsonObject json) {
+        tiles = new ArrayList<>(SIZE);
+        for (JsonElement line : json.get("tiles").getAsJsonArray()) {
+            ArrayList<Tile> lineOfTiles = new ArrayList<>();
+            for (JsonElement t : line.getAsJsonArray()) {
+                lineOfTiles.add(new Tile(t.getAsJsonObject()));
+            }
+            tiles.add(lineOfTiles);
         }
     }
 
@@ -91,11 +98,25 @@ public class Board {
     boolean isFull() {
         for (List<Tile> line : tiles) {
             for (Tile tile : line) {
-                if (tile.toString().equals("*")) {
+                if (tile.isFree()) {
                     return false;
                 }
             }
         }
         return true;
+    }
+
+    public JsonElement toJson() {
+        JsonArray array = new JsonArray();
+        for (List<Tile> list : tiles) {
+            JsonArray local = new JsonArray();
+            for (Tile t : list) {
+                local.add(t.toJson());
+            }
+            array.add(local);
+        }
+        JsonObject k = new JsonObject();
+        k.add("tiles", array);
+        return k;
     }
 }

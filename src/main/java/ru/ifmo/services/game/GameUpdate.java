@@ -19,4 +19,8 @@ public class GameUpdate {
         this.text = message;
         this.picture = file;
     }
+
+    public String getText() {
+        return text;
+    }
 }
