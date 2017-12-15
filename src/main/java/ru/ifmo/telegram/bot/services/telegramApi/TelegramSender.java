@@ -1,15 +1,12 @@
 package ru.ifmo.telegram.bot.services.telegramApi;
 
-import org.apache.catalina.util.URLEncoder;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -20,12 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Update;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,10 +51,7 @@ public class TelegramSender {
             String url = "https://api.telegram.org/bot" + token + "/" + type;
             HttpPost httpPost = new HttpPost(url);
             httpPost.setEntity(entity);
-            CloseableHttpResponse response2 = httpclient.execute(httpPost);
-            InputStream tmp = response2.getEntity().getContent();
-            // logger.info(IOUtils.toString(tmp, "UTF-8"));
-            return IOUtils.toString(tmp, "UTF-8");
+            return IOUtils.toString(httpclient.execute(httpPost).getEntity().getContent(), "UTF-8");
         } catch (IOException e) {
             logger.info(e.getMessage());
             throw new TgException("Error on " + type + " occured.", e);
