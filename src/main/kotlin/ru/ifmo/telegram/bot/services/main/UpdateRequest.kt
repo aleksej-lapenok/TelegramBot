@@ -11,6 +11,7 @@ import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
 import ru.ifmo.telegram.bot.services.telegramApi.TypeUpdate
 import ru.ifmo.telegram.bot.services.telegramApi.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Button
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
 import java.io.File
 
@@ -25,7 +26,7 @@ class UpdateRequest(
     private var lastUpdate = 0L
     private val games = mutableMapOf<Player, Game<*>>()
     private val query = Games.values().toMutableList().map { it.name to mutableSetOf<Player>() }.toMap()
-    private val invents = mutableMapOf<Player, MutableList<Invent>>()
+    //    private val invents = mutableMapOf<Player, MutableList<Invent>>()
     private val privateGames = mutableMapOf<Player, PrivateGame>()
 
     @Scheduled(fixedDelay = 1000)
@@ -38,14 +39,6 @@ class UpdateRequest(
             // sendFileToPlayer(player, File("pic.png"))
             logger.info(update.data)
             if (update.data.startsWith("/skip")) {
-                continue
-            }
-            if (update.type == TypeUpdate.CALLBACK_QUERY) {
-                telegramSender.hideKeyboard(update)
-            }
-            if (update.data.startsWith("/start")) {
-                val text = player.name + " registered"
-                sendToPlayer(player, text)
                 continue
             }
             if (update.data.startsWith("/game")) {
@@ -68,17 +61,14 @@ class UpdateRequest(
                 if (game == null) {
                     sendToPlayer(player, "waiting other players")
                 } else {
-                    game.getPlayes().forEach {
-                        if (game.isCurrent(it)) {
-                            sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
-                        } else {
-                            sendToPlayer(it, game.getMessage(it))
-                        }
-                    }
+                    startGame(game)
                 }
                 continue
             }
             if (update.data.startsWith("/surrender")) {
+                if (update.type == TypeUpdate.CALLBACK_QUERY) {
+                    telegramSender.hideKeyboard(update)
+                }
                 val game = getGameByPlayer(player)
                 if (game == null) {
                     sendToPlayer(player, "You should start game before you surrender")
@@ -93,6 +83,9 @@ class UpdateRequest(
                 continue
             }
             if (update.data.startsWith("/turn")) {
+                if (update.type == TypeUpdate.CALLBACK_QUERY) {
+                    telegramSender.hideKeyboard(update)
+                }
                 val game = getGameByPlayer(player)
                 if (game == null) {
                     sendToPlayer(player, "You should start game")
@@ -100,7 +93,7 @@ class UpdateRequest(
                 }
                 val stepFactory = mainGameFactory.getStepFactory(game.getGameId())!!
                 val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
-                sendToPlayer(player, (game as Game<Step>).step(step as Step))
+                sendToPlayer(player, (game as Game<Step>).step(step))
                 game.getPlayes()
                         .forEach {
                             if (game.isCurrent(it)) {
@@ -148,12 +141,28 @@ class UpdateRequest(
                     sendToPlayer(player, "You can't delete game, because you didn't create it")
                     continue
                 }
-//todo: write delete game
+                privateGame.players.forEach { removePlayerFromPrivateGame(player) }
+                privateGame.players.forEach { sendToPlayer(it, "${player.name} deleted this game") }
+                privateGame.inventions.forEach { sendToPlayer(it, "${player.name} deleted game ${privateGame.game.name}, invention not valid") }
+
+                continue
             }
             if (update.data.startsWith("/leave")) {
-                //todo: write leave code from game
+                val privateGame = getPrivateGameByPlayer(player)
+                if (privateGame == null) {
+                    sendToPlayer(player, "You already out of privateGame")
+                    continue
+                }
+                assert(privateGame.players.contains(player))
+                removePlayerFromPrivateGame(player)
+                privateGame.players.remove(player)
+                privateGame.players.forEach { sendToPlayer(it, "${player.name} left game") }
+                privateGame.inventions.forEach { sendToPlayer(it, "${player.name} left game") }
+                sendToPlayer(player, "You left game")
+                continue
             }
             if (update.data.startsWith("/invent")) {
+
                 val privateGame = getPrivateGameByPlayer(player)
                 if (privateGame == null) {
                     sendToPlayer(player, "not found your game")
@@ -174,7 +183,7 @@ class UpdateRequest(
                     sendToPlayer(player, "Unknown player $player2")
                     continue
                 }
-                if (getInventionsForPlayer(player)?.map { it.playerTo }?.contains(player2) == true) {
+                if (privateGame.inventions.contains(player2)) {
                     sendToPlayer(player, "You already invented ${player2.name}")
                     continue
                 }
@@ -182,12 +191,75 @@ class UpdateRequest(
                     sendToPlayer(player, "${player2.name} already in game")
                     continue
                 }
-                sendToPlayer(player2, "You reserve invention into ${privateGame.game.name} from ${player.name}")
-                sendToPlayer(player2, "Use /accept ${player.name} to accept it")
+                val keyBoard = Keyboard()
+                keyBoard.addButton(Button("callback_data", "/accept ${player.chatId}", "Accept"))
+                keyBoard.addButton(Button("callback_data", "/hide ${player.chatId}", "Not accept"))
+                sendToPlayer(player2, "You reserve invention into ${privateGame.game.name} from ${player.name}", keyBoard)
                 sendToPlayer(player, "Inventions was sent")
-                val invent = Invent(privateGame, player2)
                 privateGame.inventions.add(player2)
-                addInvention(player2, invent)
+                continue
+            }
+            if (update.data.startsWith("/hide")) {
+                val id = update.data.split(" ")[1].toLong()
+                if (update.type == TypeUpdate.CALLBACK_QUERY) {
+                    telegramSender.hideKeyboard(update)
+                }
+                val player2 = playerRepository.findByChatId(id)
+                if (player2 == null) {
+                    sendToPlayer(player, "Strange command")
+                    continue
+                }
+                val game = getPrivateGameByPlayer(player2)
+                if (game == null || !game.inventions.contains(player)) {
+                    sendToPlayer(player, "No invention")
+                    continue
+                }
+                game.inventions.remove(player)
+                game.players.forEach { sendToPlayer(it, "${player.name} didn't accept invention") }
+                game.inventions.forEach { sendToPlayer(it, "${player.name} didn't accept invention") }
+                sendToPlayer(player, "You refused invention")
+                continue
+            }
+            if (update.data.startsWith("/accept")) {
+                if (getGameByPlayer(player) != null || getPrivateGameByPlayer(player) != null) {
+                    sendToPlayer(player, "You can't accept it, because you accepted other invention or you're in game")
+                    continue
+                }
+                val id = update.data.split(" ")[1].toLong()
+                val player2 = playerRepository.findByChatId(id)
+                if (player2 == null) {
+                    sendToPlayer(player, "Strange command")
+                    continue
+                }
+                if (update.type == TypeUpdate.CALLBACK_QUERY) {
+                    telegramSender.hideKeyboard(update)
+                }
+                val game = getPrivateGameByPlayer(player2)
+                if (game == null || !game.inventions.contains(player)) {
+                    sendToPlayer(player, "No invention")
+                    continue
+                }
+                game.players.add(player)
+                game.inventions.remove(player)
+
+                game.players.forEach { sendToPlayer(it, "${player.name} in game") }
+                game.inventions.forEach { sendToPlayer(it, "${player.name} in game") }
+                addPlayerInPrivateGame(player, game)
+                continue
+            }
+            if (update.data.startsWith("/startGame")) {
+                val game = tryToGetPrivateGame(player)
+                if (game == null) {
+                    sendToPlayer(player, "You can't start game")
+                    continue
+                }
+                game.getPlayes().forEach { removePlayerFromPrivateGame(it) }
+                startGame(game)
+                continue
+            }
+            if (update.data.startsWith("/start")) {
+                val text = player.name + " registered"
+                sendToPlayer(player, text)
                 continue
             }
             if (update.data.startsWith("/help")) {
@@ -201,12 +273,26 @@ class UpdateRequest(
         }
     }
 
+    fun <T : Step> startGame(game: Game<T>) {
+        game.getPlayes().forEach {
+            if (game.isCurrent(it)) {
+                sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
+            } else {
+                sendToPlayer(it, game.getMessage(it))
+            }
+        }
+    }
+
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
     fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
     fun sendFileToPlayer(player: Player, file: File) = telegramSender.sendPicture(player.chatId, file)!!
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
         games[player] = game
+    }
+
+    fun addPlayerInPrivateGame(player: Player, privateGame: PrivateGame) {
+        privateGames[player] = privateGame
     }
 
     fun tryToGetNewGame(name: String): Game<*>? {
@@ -240,9 +326,9 @@ class UpdateRequest(
     fun createPrivateGame(player: Player, game: String) = privateGames.put(player, PrivateGame(Games.valueOf(game), player))
 
     fun tryToGetPrivateGame(player: Player): Game<*>? {
-        val privateGame = getPrivateGameByPlayer(player)!!
+        val privateGame = getPrivateGameByPlayer(player) ?: return null
         val factory = mainGameFactory.getGameFactory(privateGame.game)!!
-        return if (privateGame.players.size >= factory.minNumberPlayers()) {
+        return if (privateGame.players.size >= factory.minNumberPlayers() && privateGame.creator == player) {
             val game = factory.getGame(*privateGame.players.toTypedArray())
             privateGame.players.forEach { addPlayerInGame(it, game) }
             game
@@ -254,28 +340,16 @@ class UpdateRequest(
     fun removePlayerFromGame(player: Player) = games.remove(player)
 
     fun removePlayerFromPrivateGame(player: Player) {
-        //todo: write code
+        privateGames.remove(player)
     }
 
     fun addPlayerInQuery(player: Player, games: String) = query[games]!!.add(player)
-
-    fun addInvention(player: Player, invent: UpdateRequest.Invent) {
-        if (invents.containsKey(player)) {
-            if (!invents[player]?.contains(invent)!!)
-                invents[player]!!.add(invent)
-        } else {
-            invents.put(player, mutableListOf(invent))
-        }
-    }
-
-    fun getInventionsForPlayer(player: Player) = invents[player]
 
     data class Invent(val game: PrivateGame, val playerTo: Player)
 
     data class PrivateGame(val game: Games, val creator: Player) {
 
-        val players = mutableListOf(creator)
-        val inventions = mutableListOf<Player>()
-        fun addPlayer(player: Player) = players.add(player)
+        val players = mutableSetOf(creator)
+        val inventions = mutableSetOf<Player>()
     }
 }
