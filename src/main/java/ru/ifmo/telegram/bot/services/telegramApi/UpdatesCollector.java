@@ -40,27 +40,36 @@ public class UpdatesCollector {
 //            actualObj = actualObj.get("response");
             array.forEach(
                     it -> {
+                        logger.info(it.toString());
                         JsonObject message = it.getAsJsonObject();
                         long update_id = message.get("update_id").getAsLong();
                         if (message.get("message") != null) {
                             JsonObject obj = message.get("message").getAsJsonObject();
+                            Long messageId = obj.get("message_id").getAsLong();
                             Long from = obj.get("from").getAsJsonObject().get("id").getAsLong();
                             Long where = obj.get("chat").getAsJsonObject().get("id").getAsLong();
                             String text = obj.get("text").getAsString();
                             String username = obj.get("from").getAsJsonObject().get("username") != null ?
                                     obj.get("from").getAsJsonObject().get("username").getAsString() :
                                     obj.get("from").getAsJsonObject().get("first_name").getAsString();
-                            updates.add(new Update(TypeUpdate.MESSAGE, text, username, from, where, update_id));
+                            updates.add(new Update(TypeUpdate.MESSAGE, text, username, from, where, update_id, messageId));
                             return;
                         }
                         if (message.get("callback_query") != null) {
                             JsonObject obj = message.get("callback_query").getAsJsonObject();
                             Long from = obj.get("from").getAsJsonObject().get("id").getAsLong();
-                            Long where = obj.get("message") != null ?
-                                    obj.get("message").getAsJsonObject().get("chat").getAsJsonObject().get("id").getAsLong() :
-                                    from;
+                            String username = obj.get("from").getAsJsonObject().get("username") != null ?
+                                    obj.get("from").getAsJsonObject().get("username").getAsString() :
+                                    obj.get("from").getAsJsonObject().get("first_name").getAsString();
+                            Long where = from;
+                            Long messageId = 0L;
+                            if (obj.get("message") != null ) {
+                                JsonObject msg = obj.get("message").getAsJsonObject();
+                                where = msg.get("chat").getAsJsonObject().get("id").getAsLong();
+                                messageId = msg.get("message_id").getAsLong();
+                            }
                             String data = obj.get("data").getAsString();
-                            updates.add(new Update(TypeUpdate.CALLBACK_QUERY, data, null, from, where, update_id));
+                            updates.add(new Update(TypeUpdate.CALLBACK_QUERY, data, username, from, where, update_id, messageId));
                         }
                     }
             );

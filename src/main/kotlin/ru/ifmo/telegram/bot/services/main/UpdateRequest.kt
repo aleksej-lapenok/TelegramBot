@@ -8,6 +8,7 @@ import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
 import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
+import ru.ifmo.telegram.bot.services.telegramApi.TypeUpdate
 import ru.ifmo.telegram.bot.services.telegramApi.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
@@ -34,6 +35,9 @@ class UpdateRequest(
             val player = getOrCreatePlayer(update)
             // sendFileToPlayer(player, File("pic.png"))
             logger.info(update.data)
+            if (update.type == TypeUpdate.CALLBACK_QUERY) {
+                telegramSender.hideKeyboard(update)
+            }
             if (update.data.startsWith("/start")) {
                 val text = player.name + " registered"
                 sendToPlayer(player, text)
