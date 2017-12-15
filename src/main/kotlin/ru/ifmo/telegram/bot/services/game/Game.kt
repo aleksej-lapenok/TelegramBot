@@ -1,7 +1,10 @@
 package ru.ifmo.telegram.bot.services.game
 
+import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.services.main.Games
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
+import java.io.File
 
 /**
  *
@@ -15,12 +18,18 @@ interface Game<in T : Step> {
     /**
      * return state of game
      */
-    fun drawPicture(player: Player): Array<Byte>
+    fun drawPicture(player: Player): File
 
     /**
      * возвращает то, что надо делать игроку
      */
     fun getMessage(player: Player): String
+
+
+    fun getKeyboard(player: Player): Keyboard
+
+
+    fun getGameUpdate(player: Player): GameUpdate
 
     /**
      * surrender game
@@ -40,6 +49,9 @@ interface Game<in T : Step> {
     fun getGameId(): Games
 
     fun isFinished(): Boolean
+
+    fun isCurrent(player: Player): Boolean
+
 }
 
 
