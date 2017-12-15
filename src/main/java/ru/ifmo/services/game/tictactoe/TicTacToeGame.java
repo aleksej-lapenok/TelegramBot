@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import kotlin.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import ru.ifmo.services.game.GameException;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
@@ -31,25 +32,32 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         board = new Board();
     }
 
-    TicTacToeGame(String jsonString) {
+    TicTacToeGame(String jsonString, Player player1, Player player2) throws GameException{
         JsonParser parser = new JsonParser();
         JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
         state = GameState.valueOf(gameJson.get("state").getAsString());
         board = new Board(gameJson.get("board").getAsJsonObject());
-        // TODO: players from json
-        p1 = null;
-        p2 = null;
-        currPlayer = null;
+        if (gameJson.get("p1").getAsLong() == player1.getId() && gameJson.get("p2").getAsLong() == player2.getId()) {
+            p1 = player1;
+            p2 = player2;
+        } else {
+            if (gameJson.get("p2").getAsLong() == player1.getId() && gameJson.get("p1").getAsLong() == player2.getId()) {
+                p2 = player1;
+                p1 = player2;
+            } else {
+                throw new GameException("Wrong players for deserialization");
+            }
+        }
+        currPlayer = gameJson.get("currPlayer").getAsLong() == player1.getId() ? player1 : player2;
     }
 
     public JsonObject toJsonObject() {
         JsonObject object = new JsonObject();
         object.add("board", board.toJson());
         object.addProperty("state", state.toString());
-        // TODO: players to json
-//        object.addProperty("p1", p1.toString());
-//        object.addProperty("p2", p2.toString());
-//        object.addProperty("currPlayer", currPlayer.toString());
+        object.addProperty("p1", p1.getId());
+        object.addProperty("p2", p2.getId());
+        object.addProperty("currPlayer", currPlayer.getId());
         return object;
     }
 
