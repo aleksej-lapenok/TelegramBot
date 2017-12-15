@@ -129,7 +129,7 @@ class UpdateRequest(
                     continue
                 }
                 createPrivateGame(player, name)
-                sendToPlayer(player, "Game created, use /invent <username> to invent your friends")
+                sendToPlayer(player, "Game created, use /invite <username> to invent your friends")
                 val factory = mainGameFactory.getGameFactory(name)!!
                 sendToPlayer(player, "Your can send ${factory.maxNumberPlayers() - 1} inventions")
                 sendToPlayer(player, "To start game use command /startGame")
@@ -161,11 +161,11 @@ class UpdateRequest(
                 sendToPlayer(player, "You left game")
                 continue
             }
-            if (update.data.startsWith("/invent")) {
+            if (update.data.startsWith("/invite")) {
 
                 val privateGame = getPrivateGameByPlayer(player)
                 if (privateGame == null) {
-                    sendToPlayer(player, "not found your game")
+                    sendToPlayer(player, "Didn't find your game")
                     continue
                 }
                 if (privateGame.creator != player) {
@@ -184,7 +184,7 @@ class UpdateRequest(
                     continue
                 }
                 if (privateGame.inventions.contains(player2)) {
-                    sendToPlayer(player, "You already invented ${player2.name}")
+                    sendToPlayer(player, "You have already invited ${player2.name}")
                     continue
                 }
                 if (privateGame.players.contains(player2)) {
@@ -193,9 +193,9 @@ class UpdateRequest(
                 }
                 val keyBoard = Keyboard()
                 keyBoard.addButton(Button("callback_data", "/accept ${player.chatId}", "Accept"))
-                keyBoard.addButton(Button("callback_data", "/hide ${player.chatId}", "Not accept"))
-                sendToPlayer(player2, "You reserve invention into ${privateGame.game.name} from ${player.name}", keyBoard)
-                sendToPlayer(player, "Inventions was sent")
+                keyBoard.addButton(Button("callback_data", "/hide ${player.chatId}", "Decline"))
+                sendToPlayer(player2, "You reserve invitation into ${privateGame.game.name} from ${player.name}", keyBoard)
+                sendToPlayer(player, "Invitations was sent")
                 privateGame.inventions.add(player2)
                 continue
             }
@@ -211,18 +211,18 @@ class UpdateRequest(
                 }
                 val game = getPrivateGameByPlayer(player2)
                 if (game == null || !game.inventions.contains(player)) {
-                    sendToPlayer(player, "No invention")
+                    sendToPlayer(player, "No invitation")
                     continue
                 }
                 game.inventions.remove(player)
-                game.players.forEach { sendToPlayer(it, "${player.name} didn't accept invention") }
-                game.inventions.forEach { sendToPlayer(it, "${player.name} didn't accept invention") }
-                sendToPlayer(player, "You refused invention")
+                game.players.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
+                game.inventions.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
+                sendToPlayer(player, "You refused invitation")
                 continue
             }
             if (update.data.startsWith("/accept")) {
                 if (getGameByPlayer(player) != null || getPrivateGameByPlayer(player) != null) {
-                    sendToPlayer(player, "You can't accept it, because you accepted other invention or you're in game")
+                    sendToPlayer(player, "You can't accept it, because you accepted other invitation or you're in game")
                     continue
                 }
                 val id = update.data.split(" ")[1].toLong()
@@ -236,7 +236,7 @@ class UpdateRequest(
                 }
                 val game = getPrivateGameByPlayer(player2)
                 if (game == null || !game.inventions.contains(player)) {
-                    sendToPlayer(player, "No invention")
+                    sendToPlayer(player, "No invitation")
                     continue
                 }
                 game.players.add(player)
@@ -258,7 +258,7 @@ class UpdateRequest(
                 continue
             }
             if (update.data.startsWith("/start")) {
-                val text = player.name + " registered"
+                val text = player.name + " has been registered"
                 sendToPlayer(player, text)
                 continue
             }
