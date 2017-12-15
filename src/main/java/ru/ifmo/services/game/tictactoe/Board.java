@@ -1,5 +1,8 @@
 package ru.ifmo.services.game.tictactoe;
 
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,9 +14,10 @@ import java.util.stream.Collectors;
 public class Board {
     //(1,1) - top left
     private List<List<Tile>> tiles;
+    private final int SIZE = 3;
 
     boolean makeTurn(int x, int y, int sign) {
-        return (x >= 1) && (x <= 3) && (y >= 1) && (y <= 3) &&
+        return (x > 0) && (x <= SIZE) && (y > 0) && (y <= SIZE) &&
                 tiles.get(y - 1).get(x - 1).makeTurn(sign);
     }
 
@@ -21,12 +25,27 @@ public class Board {
         tiles.forEach(it -> it.forEach(Tile::clear));
     }
 
+    Keyboard getKeyboard() {
+        Keyboard keyboard = new Keyboard();
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                String data = "/skip";
+                if (tiles.get(i).get(j).isFree()) {
+                    data = "/turn " + (j + 1) + " " + (i + 1);
+                }
+                keyboard.addButton(new Button("callback_data", data, tiles.get(i).get(j).toString()));
+            }
+            keyboard.addRow();
+        }
+        return keyboard;
+    }
+
     boolean hasThreeInARow() {
         // lines
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < SIZE; i++) {
             Tile t = tiles.get(0).get(i);
             boolean found = !t.toString().equals("*");
-            for (int j = 1; j < 3; j++) {
+            for (int j = 1; j < SIZE; j++) {
                 found &= t.equals(tiles.get(j).get(i));
             }
             if (found) {
@@ -34,10 +53,10 @@ public class Board {
             }
         }
         // rows
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < SIZE; i++) {
             Tile t = tiles.get(i).get(0);
             boolean found = !t.toString().equals("*");
-            for (int j = 1; j < 3; j++) {
+            for (int j = 1; j < SIZE; j++) {
                 found &= t.equals(tiles.get(i).get(j));
             }
             if (found) {
@@ -51,9 +70,9 @@ public class Board {
     }
 
     Board() {
-        tiles = new ArrayList<>(3);
-        for (int i = 0; i < 3; i++) {
-            tiles.add(Arrays.stream(new Tile[3]).map(it -> new Tile()).collect(Collectors.toList()));
+        tiles = new ArrayList<>(SIZE);
+        for (int i = 0; i < SIZE; i++) {
+            tiles.add(Arrays.stream(new Tile[SIZE]).map(it -> new Tile()).collect(Collectors.toList()));
         }
     }
 
