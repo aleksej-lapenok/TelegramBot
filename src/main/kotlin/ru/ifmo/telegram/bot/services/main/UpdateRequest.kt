@@ -49,16 +49,16 @@ class UpdateRequest(
                     sendToPlayer(player, "You should finish previous game, before start new")
                     continue
                 }
-                val name = update.data.split(" ")[1]
+                val name = update.data.split(" ")[1].toUpperCase()
                 if (!query.containsKey(name)) {
-                    logger.info("UnKnown game")
+                    sendToPlayer(player,"UnKnown game")
                     continue
                 }
 
                 addPlayerInQuery(player, name)
                 game = tryToGetNewGame(name)
                 if (game == null) {
-                    sendToPlayer(player, "waiting other playes")
+                    sendToPlayer(player, "waiting other players")
                 } else {
                     game.getPlayes().forEach {
                         if (game.isCurrent(it)) {
