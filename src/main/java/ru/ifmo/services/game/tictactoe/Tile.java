@@ -13,7 +13,7 @@ public class Tile {
     }
 
     @Contract(pure = true)
-    private boolean isFree() {
+    boolean isFree() {
         return 0 == state;
     }
 

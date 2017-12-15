@@ -1,5 +1,6 @@
 package ru.ifmo.telegram.bot.services.telegramApi;
 
+import org.apache.catalina.util.URLEncoder;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -12,9 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +50,26 @@ public class TelegramSender {
             nvps.add(new BasicNameValuePair("text", text));
             CloseableHttpResponse response2 = sendRequest("sendMessage", nvps);
             InputStream tmp = response2.getEntity().getContent();
-            // logger.info(result);
+            logger.info("strange");
+            logger.info(IOUtils.toString(tmp, "UTF-8"));
+            return IOUtils.toString(tmp, "UTF-8");
+        } catch (Exception e){
+            logger.info(e.getMessage());
+            throw new TgException("Error on sendMessage occured.", e);
+        }
+    }
+
+    public String sendMessage(Long id, String text, Keyboard keyboard) throws TgException {
+        logger.info("Sending: " + text + ", to " + id.toString());
+        try {
+            URLEncoder encoder =  new URLEncoder();
+            List<NameValuePair> nvps = new ArrayList<>();
+            nvps.add(new BasicNameValuePair("chat_id", id.toString()));
+            nvps.add(new BasicNameValuePair("text", text));
+            nvps.add(new BasicNameValuePair("reply_markup", keyboard.toJson().toString()));
+            CloseableHttpResponse response2 = sendRequest("sendMessage", nvps);
+            InputStream tmp = response2.getEntity().getContent();
+            logger.info(IOUtils.toString(tmp, "UTF-8"));
             return IOUtils.toString(tmp, "UTF-8");
         } catch (Exception e){
             logger.info(e.getMessage());

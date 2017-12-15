@@ -2,6 +2,7 @@ package ru.ifmo.telegram.bot.services.game
 
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.services.main.Games
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
 
 /**
  *
@@ -40,6 +41,10 @@ interface Game<in T : Step> {
     fun getGameId(): Games
 
     fun isFinished(): Boolean
+
+    fun isCurrent(player: Player): Boolean
+
+    fun getKeyboard(): Keyboard
 }
 
 

@@ -10,6 +10,7 @@ import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
 import ru.ifmo.telegram.bot.services.telegramApi.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
 
 @Service
 class UpdateRequest(
@@ -54,7 +55,11 @@ class UpdateRequest(
                     sendToPlayer(player, "waiting other playes")
                 } else {
                     game.getPlayes().forEach {
-                        sendToPlayer(it, game.getMessage(it))
+                        if (game.isCurrent(it)) {
+                            sendToPlayer(it, game.getMessage(it), game.getKeyboard())
+                        } else {
+                            sendToPlayer(it, game.getMessage(it))
+                        }
                     }
                 }
                 continue
@@ -83,7 +88,12 @@ class UpdateRequest(
                 val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
                 sendToPlayer(player, (game as Game<Step>).step(step as Step))
                 game.getPlayes()
-                        .forEach { sendToPlayer(it, game.getMessage(it)) }
+                        .forEach {
+                            if (game.isCurrent(it)) {
+                                sendToPlayer(it, game.getMessage(it), game.getKeyboard())
+                            } else {
+                                sendToPlayer(it, game.getMessage(it))
+                            } }
                 if (game.isFinished()) {
                     game.getPlayes().forEach {
                         sendToPlayer(it, "game finished")
@@ -104,6 +114,7 @@ class UpdateRequest(
     }
 
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
+    fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
         games[player] = game

@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
 import java.util.Arrays;
 import java.util.List;
@@ -68,6 +69,12 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
             return "Wrong player tried to make turn";
         }
 
+    }
+
+    @NotNull
+    @Override
+    public Keyboard getKeyboard() {
+        return board.getKeyboard();
     }
 
     @NotNull
@@ -138,6 +145,10 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     @Override
     public boolean isFinished() {
         return currPlayer == 0 || board.isFull();
+    }
+
+    public boolean isCurrent(Player p) {
+        return (p1.equals(p) && currPlayer > 0) || (p2.equals(p) && currPlayer < 0);
     }
 }
 

@@ -1,5 +1,10 @@
 package ru.ifmo.services.game.tictactoe;
 
+import ru.ifmo.telegram.bot.services.telegramApi.TypeUpdate;
+import ru.ifmo.telegram.bot.services.telegramApi.Update;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +24,21 @@ public class Board {
 
     void clear() {
         tiles.forEach(it -> it.forEach(Tile::clear));
+    }
+
+    Keyboard getKeyboard() {
+        Keyboard keyboard = new Keyboard();
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                String data = "/skip";
+                if (tiles.get(i).get(j).isFree()) {
+                    data = "/turn " + (j + 1) + " " + (i + 1);
+                }
+                keyboard.addButton(new Button("callback_data", data, tiles.get(i).get(j).toString()));
+            }
+            keyboard.addRow();
+        }
+        return keyboard;
     }
 
     boolean hasThreeInARow() {
