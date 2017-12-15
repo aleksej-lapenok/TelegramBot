@@ -24,6 +24,8 @@ class UpdateRequest(
     private var lastUpdate = 0L
     private val games = mutableMapOf<Player, Game<*>>()
     private val query = Games.values().toMutableList().map { it.name to mutableSetOf<Player>() }.toMap()
+    private val invents = mutableMapOf<Player, MutableList<Invent>>()
+    private val privateGames = mutableMapOf<Player, PrivateGame>()
 
     @Scheduled(fixedDelay = 1000)
     fun getUpdates() {
@@ -34,6 +36,9 @@ class UpdateRequest(
             val player = getOrCreatePlayer(update)
             // sendFileToPlayer(player, File("pic.png"))
             logger.info(update.data)
+            if (update.data.startsWith("/skip")) {
+                continue
+            }
             if (update.data.startsWith("/start")) {
                 val text = player.name + " registered"
                 sendToPlayer(player, text)
@@ -46,8 +51,10 @@ class UpdateRequest(
                     continue
                 }
                 val name = update.data.split(" ")[1]
-                if (!query.containsKey(name)) {
-                    logger.info("UnKnown game")
+                try {
+                    Games.valueOf(name)
+                } catch (e: IllegalArgumentException) {
+                    sendToPlayer(player, "Unknown game")
                     continue
                 }
 
@@ -95,13 +102,87 @@ class UpdateRequest(
                                 sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
                             } else {
                                 sendToPlayer(it, game.getMessage(it))
-                            } }
+                            }
+                        }
                 if (game.isFinished()) {
                     game.getPlayes().forEach {
                         sendToPlayer(it, "game finished")
                         removePlayerFromGame(player)
                     }
                 }
+                continue
+            }
+            if (update.data.startsWith("/create")) {
+                val game = getGameByPlayer(player)
+                if (game != null) {
+                    sendToPlayer(player, "You should finish game, before create own game")
+                    continue
+                }
+                val privateGame = getPrivateGameByPlayer(player)
+                if (privateGame != null) {
+                    sendToPlayer(player, "You should play in ${privateGame.game.name} or delete it with command /delete or leave with command /leave")
+                    continue
+                }
+                val name = update.data.split(" ")[1]
+                try {
+                    Games.valueOf(name)
+                } catch (e: IllegalArgumentException) {
+                    sendToPlayer(player, "Unknown game")
+                    continue
+                }
+                createPrivateGame(player, name)
+                sendToPlayer(player, "Game created, use /invent <username> to invent your friends")
+                val factory = mainGameFactory.getGameFactory(name)!!
+                sendToPlayer(player, "Your can send ${factory.maxNumberPlayers() - 1} inventions")
+                sendToPlayer(player, "To start game use command /startGame")
+                continue
+            }
+            if (update.data.startsWith("/delete")) {
+                val privateGame = getPrivateGameByPlayer(player)
+                if (privateGame == null) {
+                    sendToPlayer(player, "You can't delete game, because you didn't create it")
+                    continue
+                }
+//todo: write delete game
+            }
+            if (update.data.startsWith("/leave")) {
+                //todo: write leave code from game
+            }
+            if (update.data.startsWith("/invent")) {
+                val privateGame = getPrivateGameByPlayer(player)
+                if (privateGame == null) {
+                    sendToPlayer(player, "not found your game")
+                    continue
+                }
+                if (privateGame.creator != player) {
+                    sendToPlayer(player, "Your can't invite anyone")
+                    continue
+                }
+                val factory = mainGameFactory.getGameFactory(privateGame.game)!!
+                if (privateGame.players.size + privateGame.inventions.size + 1 > factory.maxNumberPlayers()) {
+                    sendToPlayer(player, "No places in game")
+                    continue
+                }
+                val name = update.data.split(" ")[1]
+                val player2 = playerRepository.findByName(name)
+                if (player2 == null) {
+                    sendToPlayer(player, "Unknown player $player2")
+                    continue
+                }
+                if (getInventionsForPlayer(player)?.map { it.playerTo }?.contains(player2) == true) {
+                    sendToPlayer(player, "You already invented ${player2.name}")
+                    continue
+                }
+                if (privateGame.players.contains(player2)) {
+                    sendToPlayer(player, "${player2.name} in game")
+                    continue
+                }
+                sendToPlayer(player2, "You reserve invention into ${privateGame.game.name} from ${player.name}")
+                sendToPlayer(player2, "Use /accept ${player.name} to accept invention")
+                sendToPlayer(player, "Inventions sent")
+                val invent = Invent(privateGame, player2)
+                privateGame.inventions.add(player2)
+                addInvention(player2, invent)
                 continue
             }
             if (update.data.startsWith("/help")) {
@@ -149,8 +230,47 @@ class UpdateRequest(
 
     fun getGameByPlayer(player: Player) = games[player]
 
+    fun getPrivateGameByPlayer(player: Player) = privateGames[player]
+
+    fun createPrivateGame(player: Player, game: String) = privateGames.put(player, PrivateGame(Games.valueOf(game), player))
+
+    fun tryToGetPrivateGame(player: Player): Game<*>? {
+        val privateGame = getPrivateGameByPlayer(player)!!
+        val factory = mainGameFactory.getGameFactory(privateGame.game)!!
+        return if (privateGame.players.size >= factory.minNumberPlayers()) {
+            val game = factory.getGame(*privateGame.players.toTypedArray())
+            privateGame.players.forEach { addPlayerInGame(it, game) }
+            game
+        } else {
+            null
+        }
+    }
+
     fun removePlayerFromGame(player: Player) = games.remove(player)
+
+    fun removePlayerFromPrivateGame(player: Player) {
+        //todo: write code
+    }
 
     fun addPlayerInQuery(player: Player, games: String) = query[games]!!.add(player)
 
+    fun addInvention(player: Player, invent: UpdateRequest.Invent) {
+        if (invents.containsKey(player)) {
+            if (!invents[player]?.contains(invent)!!)
+                invents[player]!!.add(invent)
+        } else {
+            invents.put(player, mutableListOf(invent))
+        }
+    }
+
+    fun getInventionsForPlayer(player: Player) = invents[player]
+
+    data class Invent(val game: PrivateGame, val playerTo: Player)
+
+    data class PrivateGame(val game: Games, val creator: Player) {
+
+        val players = mutableListOf(creator)
+        val inventions = mutableListOf<Player>()
+        fun addPlayer(player: Player) = players.add(player)
+    }
 }
