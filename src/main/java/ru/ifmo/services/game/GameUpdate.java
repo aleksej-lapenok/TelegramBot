@@ -9,14 +9,14 @@ public class GameUpdate {
     String text;
     Keyboard keyboard = null;
 
-    public GameUpdate(String msg, Keyboard kbd, File file) {
-        text = msg;
-        keyboard = kbd;
-        picture = file;
+    public GameUpdate(String message, Keyboard keyboard, File file) {
+        this.text = message;
+        this.keyboard = keyboard;
+        this.picture = file;
     }
 
-    GameUpdate(String msg, File file) {
-        text = msg;
-        picture = file;
+    GameUpdate(String message, File file) {
+        this.text = message;
+        this.picture = file;
     }
 }

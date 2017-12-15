@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,21 +25,7 @@ public class Keyboard {
 
     @Override
     public String toString() {
-        StringBuilder ans = new StringBuilder();
-        JsonArray array = new JsonArray();
-        ans.append('[');
-        for (List<Button> list : buttons) {
-            JsonArray local = new JsonArray();
-            ans.append('[');
-            for (Button b : list) {
-                ans.append(b.toString());
-                ans.append(",");
-            }
-            ans.setCharAt(ans.length() - 1, ']');
-            ans.append(',');
-        }
-        ans.setCharAt(ans.length() - 1, ']');
-        return ans.toString();
+        return toJson().toString();
     }
 
 
