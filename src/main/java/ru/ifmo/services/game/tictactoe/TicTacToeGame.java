@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import kotlin.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import ru.ifmo.services.game.GameException;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
@@ -31,25 +32,32 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         board = new Board();
     }
 
-    TicTacToeGame(String jsonString) {
+    TicTacToeGame(String jsonString, Player player1, Player player2) throws GameException{
         JsonParser parser = new JsonParser();
         JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
         state = GameState.valueOf(gameJson.get("state").getAsString());
         board = new Board(gameJson.get("board").getAsJsonObject());
-        // TODO: players from json
-        p1 = null;
-        p2 = null;
-        currPlayer = null;
+        if (gameJson.get("p1").getAsLong() == player1.getId() && gameJson.get("p2").getAsLong() == player2.getId()) {
+            p1 = player1;
+            p2 = player2;
+        } else {
+            if (gameJson.get("p2").getAsLong() == player1.getId() && gameJson.get("p1").getAsLong() == player2.getId()) {
+                p2 = player1;
+                p1 = player2;
+            } else {
+                throw new GameException("Wrong players for deserialization");
+            }
+        }
+        currPlayer = gameJson.get("currPlayer").getAsLong() == player1.getId() ? player1 : player2;
     }
 
     public JsonObject toJsonObject() {
         JsonObject object = new JsonObject();
         object.add("board", board.toJson());
         object.addProperty("state", state.toString());
-        // TODO: players to json
-//        object.addProperty("p1", p1.toString());
-//        object.addProperty("p2", p2.toString());
-//        object.addProperty("currPlayer", currPlayer.toString());
+        object.addProperty("p1", p1.getId());
+        object.addProperty("p2", p2.getId());
+        object.addProperty("currPlayer", currPlayer.getId());
         return object;
     }
 
@@ -73,32 +81,26 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                         if (board.makeTurn(step.x, step.y, tileState)) {
                             if (checkWinner()) {
                                 state = GameState.WINNER;
-                                return new Pair<String, Boolean>("You won.", Boolean.TRUE);
+                                return new Pair<>("You won.", true);
                             }
                             if (board.isFull()) {
                                 state = GameState.DRAW;
-                                return new Pair<String, Boolean>("You made draw.", Boolean.TRUE);
+                                return new Pair<>("You made draw.", true);
                             }
                             currPlayer = currPlayer == p1 ? p2 : p1;
                         }
-                        return new Pair<String, Boolean>("You made turn.", Boolean.FALSE);
+                        return new Pair<>("You made turn.", true);
                     }
-                    return new Pair<String, Boolean>("It is not your game, you can't make turns.", Boolean.FALSE);
+                    return new Pair<>("It is not your game, you can't make turns.", false);
                 }
-                return new Pair<String, Boolean>("It is not your turn. Wait.", Boolean.FALSE);
+                return new Pair<>("It is not your turn. Wait.", false);
             case WINNER:
-                return new Pair<String, Boolean>("You can't make turns, this game has won by " + currPlayer.getName() + ".", Boolean.FALSE);
+                return new Pair<>("You can't make turns, this game has won by " + currPlayer.getName() + ".", false);
             case DRAW:
-                return new Pair<String, Boolean>("You can't make turns, there is a draw.", Boolean.FALSE);
+                return new Pair<>("You can't make turns, there is a draw.", false);
             default:
-                return new Pair<String, Boolean>("Chuck?!?!?!", Boolean.FALSE);
+                return new Pair<>("Chuck?!?!?!", false);
         }
-    }
-
-    @NotNull
-    @Override
-    public Keyboard getKeyboard(Player p) {
-        return board.getKeyboard();
     }
 
 
@@ -127,15 +129,6 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         }
     }
 
-    @NotNull
-    @Override
-    public String getMessage(@NotNull Player player) {
-        return getInfo(player);
-    }
-
-    private String getInfo(Player player) {
-        return getGameUpdate(player).getText();
-    }
 
     @Override
     public void surrender(@NotNull Player player) {
@@ -155,7 +148,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @NotNull
     @Override
-    public List<Player> getPlayes() {
+    public List<Player> getPlayers() {
         return Arrays.asList(p1, p2);
     }
 
@@ -170,7 +163,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         return state != GameState.TURN;
     }
 
-    public boolean isCurrent(Player p) {
+    public boolean isCurrent(@NotNull Player p) {
         return p == currPlayer;
     }
 

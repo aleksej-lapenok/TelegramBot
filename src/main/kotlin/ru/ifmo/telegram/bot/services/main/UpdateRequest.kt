@@ -3,6 +3,7 @@ package ru.ifmo.telegram.bot.services.main
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
@@ -76,8 +77,8 @@ class UpdateRequest(
                 }
                 game.surrender(player)
                 sendToPlayer(player, "You left this game")
-                game.getPlayes().forEach {
-                    sendToPlayer(it, game.getMessage(it))
+                game.getPlayers().forEach {
+                    sendToPlayer(it, game.getGameUpdate(it))
                 }
                 removePlayerFromGame(player)
                 continue
@@ -93,19 +94,18 @@ class UpdateRequest(
                 }
                 val stepFactory = mainGameFactory.getStepFactory(game.getGameId())!!
                 val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
-                sendToPlayer(player, (game as Game<Step>).step(step).first)
-                game.getPlayes()
-                        .forEach {
-                            if (game.isCurrent(it)) {
-                                sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
-                            } else {
-                                sendToPlayer(it, game.getMessage(it))
-                            }
-                        }
+                val resStep = (game as Game<Step>).step(step)
+                sendToPlayer(player, resStep.first)
+                if (resStep.second) {
+                    game.getPlayers()
+                            .forEach { sendToPlayer(it, game.getGameUpdate(it)) }
+                } else {
+                    sendToPlayer(player, game.getGameUpdate(player))
+                }
                 if (game.isFinished()) {
-                    game.getPlayes().forEach {
+                    game.getPlayers().forEach {
                         sendToPlayer(it, "game finished")
-                        removePlayerFromGame(player)
+                        removePlayerFromGame(it)
                     }
                 }
                 continue
@@ -129,9 +129,9 @@ class UpdateRequest(
                     continue
                 }
                 createPrivateGame(player, name)
-                sendToPlayer(player, "Game created, use /invent <username> to invent your friends")
+                sendToPlayer(player, "Game created, use /invite <username> to invent your friends")
                 val factory = mainGameFactory.getGameFactory(name)!!
-                sendToPlayer(player, "Your can send ${factory.maxNumberPlayers() - 1} inventions")
+                sendToPlayer(player, "Your can send ${factory.maxNumberPlayers() - 1} invitations")
                 sendToPlayer(player, "To start game use command /startGame")
                 continue
             }
@@ -161,11 +161,11 @@ class UpdateRequest(
                 sendToPlayer(player, "You left game")
                 continue
             }
-            if (update.data.startsWith("/invent")) {
+            if (update.data.startsWith("/invite")) {
 
                 val privateGame = getPrivateGameByPlayer(player)
                 if (privateGame == null) {
-                    sendToPlayer(player, "not found your game")
+                    sendToPlayer(player, "Didn't find your game")
                     continue
                 }
                 if (privateGame.creator != player) {
@@ -184,7 +184,7 @@ class UpdateRequest(
                     continue
                 }
                 if (privateGame.inventions.contains(player2)) {
-                    sendToPlayer(player, "You already invented ${player2.name}")
+                    sendToPlayer(player, "You have already invited ${player2.name}")
                     continue
                 }
                 if (privateGame.players.contains(player2)) {
@@ -193,9 +193,9 @@ class UpdateRequest(
                 }
                 val keyBoard = Keyboard()
                 keyBoard.addButton(Button("callback_data", "/accept ${player.chatId}", "Accept"))
-                keyBoard.addButton(Button("callback_data", "/hide ${player.chatId}", "Not accept"))
-                sendToPlayer(player2, "You reserve invention into ${privateGame.game.name} from ${player.name}", keyBoard)
-                sendToPlayer(player, "Inventions was sent")
+                keyBoard.addButton(Button("callback_data", "/hide ${player.chatId}", "Decline"))
+                sendToPlayer(player2, "You reserve invitation into ${privateGame.game.name} from ${player.name}", keyBoard)
+                sendToPlayer(player, "Invitations was sent")
                 privateGame.inventions.add(player2)
                 continue
             }
@@ -211,18 +211,18 @@ class UpdateRequest(
                 }
                 val game = getPrivateGameByPlayer(player2)
                 if (game == null || !game.inventions.contains(player)) {
-                    sendToPlayer(player, "No invention")
+                    sendToPlayer(player, "No invitation")
                     continue
                 }
                 game.inventions.remove(player)
-                game.players.forEach { sendToPlayer(it, "${player.name} didn't accept invention") }
-                game.inventions.forEach { sendToPlayer(it, "${player.name} didn't accept invention") }
-                sendToPlayer(player, "You refused invention")
+                game.players.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
+                game.inventions.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
+                sendToPlayer(player, "You refused invitation")
                 continue
             }
             if (update.data.startsWith("/accept")) {
                 if (getGameByPlayer(player) != null || getPrivateGameByPlayer(player) != null) {
-                    sendToPlayer(player, "You can't accept it, because you accepted other invention or you're in game")
+                    sendToPlayer(player, "You can't accept it, because you accepted other invitation or you're in game")
                     continue
                 }
                 val id = update.data.split(" ")[1].toLong()
@@ -236,7 +236,7 @@ class UpdateRequest(
                 }
                 val game = getPrivateGameByPlayer(player2)
                 if (game == null || !game.inventions.contains(player)) {
-                    sendToPlayer(player, "No invention")
+                    sendToPlayer(player, "No invitation")
                     continue
                 }
                 game.players.add(player)
@@ -253,19 +253,19 @@ class UpdateRequest(
                     sendToPlayer(player, "You can't start game")
                     continue
                 }
-                game.getPlayes().forEach { removePlayerFromPrivateGame(it) }
+                game.getPlayers().forEach { removePlayerFromPrivateGame(it) }
                 startGame(game)
                 continue
             }
             if (update.data.startsWith("/start")) {
-                val text = player.name + " registered"
+                val text = player.name + " has been registered"
                 sendToPlayer(player, text)
                 continue
             }
             if (update.data.startsWith("/help")) {
                 sendToPlayer(player, "/game <nameGame> to start game\n" +
-                        "/turn <arguments of turn> to make turn \n" +
-                        "/surrender to exit from game")
+                        "/surrender to exit from game\n" +
+                        "/create <nameGame> to create private game with your friends")
                 sendToPlayer(player, "Game names: ${Games.values().map { it.name }}")
                 continue
             }
@@ -274,18 +274,20 @@ class UpdateRequest(
     }
 
     fun <T : Step> startGame(game: Game<T>) {
-        game.getPlayes().forEach {
-            if (game.isCurrent(it)) {
-                sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
-            } else {
-                sendToPlayer(it, game.getMessage(it))
-            }
+        game.getPlayers().forEach {
+            sendToPlayer(it, game.getGameUpdate(it))
         }
     }
 
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
     fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
     fun sendFileToPlayer(player: Player, file: File) = telegramSender.sendPicture(player.chatId, file)!!
+
+    fun sendToPlayer(player: Player, update: GameUpdate) {
+        sendToPlayer(player, update.text, update.keyboard)
+        if (update.picture != null)
+            sendFileToPlayer(player, update.picture)
+    }
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
         games[player] = game
