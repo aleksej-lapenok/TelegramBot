@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service
 import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.entity.PrivateGame
+import ru.ifmo.telegram.bot.repository.GameRepository
 import ru.ifmo.telegram.bot.repository.PlayerRepository
+import ru.ifmo.telegram.bot.repository.PrivateGameRepository
 import ru.ifmo.telegram.bot.services.game.Game
 import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
@@ -21,6 +23,8 @@ import java.io.File
 class UpdateRequest(
         val updatesCollector: UpdatesCollector,
         val playerRepository: PlayerRepository,
+        val gameRepository: GameRepository,
+        val privateGameRepository: PrivateGameRepository,
         val mainGameFactory: MainGameFactory,
         val telegramSender: TelegramSender) {
 
@@ -294,12 +298,12 @@ class UpdateRequest(
     }
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
-        games[player] = game
+//        games[player] = game
     }
 
     fun addPlayerInPrivateGame(player: Player, privateGame: PrivateGame) {
         player.privateGame = privateGame
-        playersForSave.add(player)
+        playerRepository.save(player)
 //        privateGames[player] = privateGame
     }
 
@@ -317,7 +321,7 @@ class UpdateRequest(
             return null
         }
         val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = Games.valueOf(name), players = game.getPlayes().toSet())
-        gameToGameDb.put(game, gameDB)
+        gameRepository.save(gameDB)
         return game
     }
 
@@ -339,26 +343,32 @@ class UpdateRequest(
     fun getPrivateGameByPlayer(player: Player) = player.privateGame
 
     fun createPrivateGame(player: Player, game: String) {
-        val game = PrivateGame(game = Games.valueOf(game), creator = player)
-
+        privateGameRepository.save(PrivateGame(game = Games.valueOf(game), creator = player))
     }
 
     fun tryToGetPrivateGame(player: Player): Game<*>? {
         val privateGame = getPrivateGameByPlayer(player) ?: return null
         val factory = mainGameFactory.getGameFactory(privateGame.game)!!
-        return if (privateGame.players.size >= factory.minNumberPlayers() && privateGame.creator == player) {
+        val game = if (privateGame.players.size >= factory.minNumberPlayers() && privateGame.creator == player) {
             val game = factory.getGame(*privateGame.players.toTypedArray())
             privateGame.players.forEach { addPlayerInGame(it, game) }
             game
         } else {
-            null
+            return null
         }
+        val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = privateGame.game, players = game.getPlayes().toSet())
+        gameRepository.save(gameDB)
+        return game
     }
 
-    fun removePlayerFromGame(player: Player) = games.remove(player)
+    fun removePlayerFromGame(player: Player) {
+        player.game = null
+        playerRepository.save(player)
+    }
 
     fun removePlayerFromPrivateGame(player: Player) {
-        privateGames.remove(player)
+        player.privateGame = null
+        playerRepository.save(player)
     }
 
     fun addPlayerInQuery(player: Player, games: String) = query[games]!!.add(player)
