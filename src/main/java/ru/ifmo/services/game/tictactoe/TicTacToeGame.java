@@ -81,30 +81,29 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                         if (board.makeTurn(step.x, step.y, tileState)) {
                             if (checkWinner()) {
                                 state = GameState.WINNER;
-                                return new Pair<String, Boolean>("You won.", Boolean.TRUE);
+                                return new Pair<>("You won.", Boolean.TRUE);
                             }
                             if (board.isFull()) {
                                 state = GameState.DRAW;
-                                return new Pair<String, Boolean>("You made draw.", Boolean.TRUE);
+                                return new Pair<>("You made draw.", true);
                             }
                             currPlayer = currPlayer == p1 ? p2 : p1;
                         }
-                        return new Pair<String, Boolean>("You made turn.", Boolean.FALSE);
+                        return new Pair<>("You made turn.", true);
                     }
-                    return new Pair<String, Boolean>("It is not your game, you can't make turns.", Boolean.FALSE);
+                    return new Pair<>("It is not your game, you can't make turns.", Boolean.FALSE);
                 }
-                return new Pair<String, Boolean>("It is not your turn. Wait.", Boolean.FALSE);
+                return new Pair<>("It is not your turn. Wait.", Boolean.FALSE);
             case WINNER:
-                return new Pair<String, Boolean>("You can't make turns, this game has won by " + currPlayer.getName() + ".", Boolean.FALSE);
+                return new Pair<>("You can't make turns, this game has won by " + currPlayer.getName() + ".", Boolean.FALSE);
             case DRAW:
-                return new Pair<String, Boolean>("You can't make turns, there is a draw.", Boolean.FALSE);
+                return new Pair<>("You can't make turns, there is a draw.", Boolean.FALSE);
             default:
-                return new Pair<String, Boolean>("Chuck?!?!?!", Boolean.FALSE);
+                return new Pair<>("Chuck?!?!?!", Boolean.FALSE);
         }
     }
 
     @NotNull
-    @Override
     public Keyboard getKeyboard(Player p) {
         return board.getKeyboard();
     }
@@ -136,7 +135,6 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     }
 
     @NotNull
-    @Override
     public String getMessage(@NotNull Player player) {
         return getInfo(player);
     }
@@ -178,7 +176,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         return state != GameState.TURN;
     }
 
-    public boolean isCurrent(Player p) {
+    public boolean isCurrent(@NotNull Player p) {
         return p == currPlayer;
     }
 
