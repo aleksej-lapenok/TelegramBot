@@ -13,7 +13,7 @@ interface Game<in T : Step> {
     /**
      * accept step and change state of game
      */
-    fun step(step: T): String
+    fun step(step: T): Pair<String, Boolean>
 
     /**
      * return state of game

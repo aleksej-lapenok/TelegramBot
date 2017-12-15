@@ -30,8 +30,8 @@ public class Board {
 
     Keyboard getKeyboard() {
         Keyboard keyboard = new Keyboard();
-        for (int row = 0; row < SIZE; row++) {
-            for (int line = 0; line < SIZE; line++) {
+        for (int line = 0; line < SIZE; line++) {
+            for (int row = 0; row < SIZE; row++) {
                 String data = "/skip";
                 if (tiles.get(line).get(row).isFree()) {
                     data = "/turn " + (row + 1) + " " + (line + 1);

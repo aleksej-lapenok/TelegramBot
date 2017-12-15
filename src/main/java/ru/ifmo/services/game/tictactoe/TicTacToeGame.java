@@ -2,6 +2,7 @@ package ru.ifmo.services.game.tictactoe;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import kotlin.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.services.game.GameUpdate;
@@ -58,39 +59,39 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @Contract(pure = true)
     private Tile.TileState getState(Player p) {
-        return p == p1 ? Tile.TileState.MARK : p == p2 ? Tile.TileState.ZERO : Tile.TileState.EMPTY;
+        return p.equals(p1) ? Tile.TileState.MARK : p.equals(p2) ? Tile.TileState.ZERO : Tile.TileState.EMPTY;
     }
 
     @Override
     @NotNull
-    public String step(@NotNull S step) {
+    public Pair<String, Boolean> step(@NotNull S step) {
         switch (state) {
             case TURN:
-                if (currPlayer == step.player) {
+                if (currPlayer.equals(step.player)) {
                     Tile.TileState tileState = getState(step.player);
                     if (tileState != Tile.TileState.EMPTY) {
                         if (board.makeTurn(step.x, step.y, tileState)) {
                             if (checkWinner()) {
                                 state = GameState.WINNER;
-                                return "You won.";
+                                return new Pair<String, Boolean>("You won.", Boolean.TRUE);
                             }
                             if (board.isFull()) {
                                 state = GameState.DRAW;
-                                return "You made draw.";
+                                return new Pair<String, Boolean>("You made draw.", Boolean.TRUE);
                             }
                             currPlayer = currPlayer == p1 ? p2 : p1;
                         }
-                        return "You tried to make wrong turn, try again.";
+                        return new Pair<String, Boolean>("You made turn.", Boolean.FALSE);
                     }
-                    return "It is not your game, you can't make turns.";
+                    return new Pair<String, Boolean>("It is not your game, you can't make turns.", Boolean.FALSE);
                 }
-                return "It is not your turn. Wait.";
+                return new Pair<String, Boolean>("It is not your turn. Wait.", Boolean.FALSE);
             case WINNER:
-                return "You can't make turns, this game has won by " + currPlayer.getName() + ".";
+                return new Pair<String, Boolean>("You can't make turns, this game has won by " + currPlayer.getName() + ".", Boolean.FALSE);
             case DRAW:
-                return "You can't make turns, there is a draw.";
+                return new Pair<String, Boolean>("You can't make turns, there is a draw.", Boolean.FALSE);
             default:
-                return "Chuck?!?!?!";
+                return new Pair<String, Boolean>("Chuck?!?!?!", Boolean.FALSE);
         }
     }
 
@@ -118,11 +119,11 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                     return new GameUpdate("Wait for opponent's turn.\n" + board.toString(), new Keyboard(), f);
                 }
             case WINNER:
-                return new GameUpdate("The game has won by " + currPlayer.getName() + "." + board.toString(), board.getKeyboard(), f);
+                return new GameUpdate("The game has won by " + currPlayer.getName() + ".\n" + board.toString(), new Keyboard(), f);
             case DRAW:
-                return new GameUpdate("There is a draw." + board.toString(), board.getKeyboard(), f);
+                return new GameUpdate("There is a draw.\n" + board.toString(), new Keyboard(), f);
             default:
-                return new GameUpdate("Chuck?!?!?!" + board.toString(), board.getKeyboard(), f);
+                return new GameUpdate("Chuck?!?!?!\n" + board.toString(), new Keyboard(), f);
         }
     }
 
