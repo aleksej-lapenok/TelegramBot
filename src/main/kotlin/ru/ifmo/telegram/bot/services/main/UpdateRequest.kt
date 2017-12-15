@@ -105,7 +105,7 @@ class UpdateRequest(
                 if (game.isFinished()) {
                     game.getPlayes().forEach {
                         sendToPlayer(it, "game finished")
-                        removePlayerFromGame(player)
+                        removePlayerFromGame(it)
                     }
                 }
                 continue
@@ -131,7 +131,7 @@ class UpdateRequest(
                 createPrivateGame(player, name)
                 sendToPlayer(player, "Game created, use /invite <username> to invent your friends")
                 val factory = mainGameFactory.getGameFactory(name)!!
-                sendToPlayer(player, "Your can send ${factory.maxNumberPlayers() - 1} inventions")
+                sendToPlayer(player, "Your can send ${factory.maxNumberPlayers() - 1} invitations")
                 sendToPlayer(player, "To start game use command /startGame")
                 continue
             }
