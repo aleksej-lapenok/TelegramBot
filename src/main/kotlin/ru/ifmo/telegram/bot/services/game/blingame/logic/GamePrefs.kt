@@ -1,4 +1,4 @@
-package ru.ifmo.telegram.bot.services.game.blingame
+package ru.ifmo.telegram.bot.services.game.blingame.logic
 
 object GamePrefs {
     val BOARD_SIZE = 10

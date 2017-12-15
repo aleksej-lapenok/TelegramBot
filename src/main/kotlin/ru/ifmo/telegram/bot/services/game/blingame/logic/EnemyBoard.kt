@@ -1,4 +1,4 @@
-package ru.ifmo.telegram.bot.services.game.blingame
+package ru.ifmo.telegram.bot.services.game.blingame.logic
 
 class EnemyBoard : Board() {
     fun markTile(x: Int, y:Int, moveResult: MoveResult) {

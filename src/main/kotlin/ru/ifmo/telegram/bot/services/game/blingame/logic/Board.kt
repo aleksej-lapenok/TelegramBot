@@ -1,4 +1,6 @@
-package ru.ifmo.telegram.bot.services.game.blingame
+package ru.ifmo.telegram.bot.services.game.blingame.logic
+
+import ru.ifmo.telegram.bot.services.game.blingame.logic.GamePrefs.BOARD_SIZE
 
 abstract class Board {
     protected val board = MutableList(GamePrefs.BOARD_SIZE, { MutableList<Tile>(GamePrefs.BOARD_SIZE, { Tile.Empty }) })
@@ -24,8 +26,14 @@ abstract class Board {
         return sb.toString()
     }
 
-    sealed class MoveResult {
-        object Miss : MoveResult()
-        data class Hit(val isKilled: Boolean = false) : MoveResult()
+    companion object {
+        fun coordsInBounds(x: Int, y: Int): Boolean {
+            return x in 0..BOARD_SIZE && y in 0..BOARD_SIZE
+        }
+
+        sealed class MoveResult {
+            object Miss : MoveResult()
+            data class Hit(val isKilled: Boolean = false) : MoveResult()
+        }
     }
 }

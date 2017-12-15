@@ -1,6 +1,6 @@
-package ru.ifmo.telegram.bot.services.game.blingame
+package ru.ifmo.telegram.bot.services.game.blingame.logic
 
-data class MyShip(private val tiles: List<Tile.MyShipTile>, private val playerId: Int) {
+data class MyShip(private val tiles: List<Tile.MyShipTile>) {
     private var wrecked = false
     init {
         for (t in tiles) {
@@ -14,4 +14,4 @@ data class MyShip(private val tiles: List<Tile.MyShipTile>, private val playerId
     }
 }
 
-val nullShip = MyShip(listOf(), 228)
+val nullShip = MyShip(listOf())

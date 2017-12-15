@@ -1,4 +1,4 @@
-package ru.ifmo.telegram.bot.services.game.blingame
+package ru.ifmo.telegram.bot.services.game.blingame.logic
 
 sealed class Tile {
     object Empty : Tile()

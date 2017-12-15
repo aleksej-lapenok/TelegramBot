@@ -1,10 +1,14 @@
-package ru.ifmo.telegram.bot.services.game.blingame
+package ru.ifmo.telegram.bot.services.game.blingame.logic
 
-import ru.ifmo.telegram.bot.services.game.blingame.GamePrefs.BOARD_SIZE
+import ru.ifmo.telegram.bot.services.game.blingame.logic.GamePrefs.BOARD_SIZE
 
-class MyBoard(val playerId: Int) : Board() {
+class MyBoard() : Board() {
     private val ships = mutableListOf<MyShip>()
     private val shipsRemainToPlace = GamePrefs.SHIP_TYPES_COUNT.toMutableMap()
+
+    fun getShipsRemainToPlace(): Map<Int, Int> {
+        return shipsRemainToPlace
+    }
 
     fun placeShip(size: Int,
                   x: Int,
@@ -23,7 +27,7 @@ class MyBoard(val playerId: Int) : Board() {
             return ShipPlaceResult.Intersects
         }
         val tiles = coordsList.map { Tile.MyShipTile() }
-        ships.add(MyShip(tiles, playerId))
+        ships.add(MyShip(tiles))
         for ((i, p) in coordsList.withIndex()) {
             val (xx, yy) = p
             board[xx][yy] = tiles[i]
@@ -72,10 +76,6 @@ class MyBoard(val playerId: Int) : Board() {
             is ShipPlaceDirection.Up -> Pair(0, -1)
             is ShipPlaceDirection.Down -> Pair(0, 1)
         }
-    }
-
-    fun coordsInBounds(x: Int, y: Int): Boolean {
-        return x in 0..BOARD_SIZE && y in 0..BOARD_SIZE
     }
 
     companion object {
