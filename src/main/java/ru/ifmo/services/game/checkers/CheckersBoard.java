@@ -1,6 +1,8 @@
 package ru.ifmo.services.game.checkers;
 
 import ru.ifmo.services.game.checkers.CheckersUtils.*;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +15,18 @@ public class CheckersBoard {
     private final static int SIZE = 8;
     //(0,0) - top left
     private List<List<CheckersTile>> tiles;
+
+    Keyboard getKeyboard() {
+        Keyboard keyboard = new Keyboard();
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                String data = "/turn " + (i + 1) + " " + (j + 1);
+                keyboard.addButton(new Button("callback_data", data, tiles.get(i).get(j).toString()));
+            }
+            keyboard.addRow();
+        }
+        return keyboard;
+    }
 
     boolean makeTurn(int x1, int y1, int x2, int y2, int player) {
         if ((x1 < 0) || (x1 >= SIZE) || (y1 < 0) || (y1 >= SIZE)

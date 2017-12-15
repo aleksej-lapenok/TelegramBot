@@ -13,16 +13,18 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CheckersGame<S extends CheckersStep> implements Game<S> {
-    private Player player1, player2;
-    private CheckersBoard board;
+    private boolean isFirstTurn;
     private int currPlayer;
-    private Player winner;
+    private int fromX, fromY;
+    private CheckersBoard board;
+    private Player player1, player2, winner;
 
     CheckersGame(Player player1, Player player2) {
         this.player1 = player1;
         this.player2 = player2;
         this.currPlayer = 1;
         this.board = new CheckersBoard();
+        isFirstTurn = true;
     }
 
     private boolean checkWinner() {
@@ -35,9 +37,16 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         if (currPlayer == 0) {
             return "Game is won by " + winner.getName();
         }
+        if (isFirstTurn) {
+            isFirstTurn = false;
+            fromX = step.x;
+            fromY = step.y;
+            return "Continue your turn!";
+        }
+        isFirstTurn = true;
         Player player = (currPlayer == 1) ? player1 : player2;
         if (player.equals(step.player)) {
-            if (board.makeTurn(step.x1 - 1, step.y1 - 1, step.x2 - 1, step.y2 - 1, currPlayer)) {
+            if (board.makeTurn(fromX - 1, fromY - 1, step.x - 1, step.y - 1, currPlayer)) {
                 if (checkWinner()) {
                     winner = player;
                     currPlayer = 0;
@@ -115,23 +124,23 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @NotNull
     @Override
     public Keyboard getKeyboard(@NotNull Player player) {
-        return null;
+        return board.getKeyboard();
     }
 
     @NotNull
     @Override
     public GameUpdate getGameUpdate(@NotNull Player player) {
-        return null;
+        return new GameUpdate(getMessage(player), getKeyboard(player), drawPicture(player));
     }
 
     @Override
     public boolean isCurrent(@NotNull Player player) {
-        return false;
+        return (player1.equals(player) && currPlayer > 0) || (player2.equals(player) && currPlayer < 0);
     }
 
     @NotNull
     @Override
     public File drawPicture(@NotNull Player player) {
-        return null;
+        return new File("");
     }
 }
