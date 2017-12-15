@@ -34,6 +34,10 @@ public class PairsTile {
         this.id = id;
     }
 
+    public char getId() {
+        return this.id;
+    }
+
     public void clear() {
         this.id = 0;
         this.open = false;
@@ -43,9 +47,9 @@ public class PairsTile {
     @Override
     public String toString() {
         if (select) {
-            return "+";
+            return (id + "").toUpperCase();
         }
-        return open ? "" + id : (id + "").toUpperCase();
+        return open ? "" + id : "*";
     }
 
     boolean equals(PairsTile obj) {

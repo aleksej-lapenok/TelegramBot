@@ -19,7 +19,7 @@ public class PairsBoard {
             tiles.add(Arrays.stream(new PairsTile[SIZE]).map(it -> new PairsTile()).collect(Collectors.toList()));
         }
         List<Integer> numbers = new LinkedList<>();
-        for (int i = 2; i <= SIZE * SIZE + 1; i++) {
+        for (int i = 0; i < SIZE * SIZE; i++) {
             numbers.add(i / 2);
         }
         Random random = new Random(System.currentTimeMillis());
@@ -49,8 +49,13 @@ public class PairsBoard {
         }
         tiles.get(x2).get(y2).open();
         tiles.get(x2).get(y2).revertSelect();
-        openCard += 2;
-        showed = true;
+        if (tiles.get(x2).get(y2).getId() == tiles.get(x1).get(y1).getId()) {
+            tiles.get(x1).get(y1).revertSelect();
+            tiles.get(x2).get(y2).revertSelect();
+            openCard += 2;
+        } else {
+            showed = true;
+        }
         return true;
     }
 
@@ -72,6 +77,7 @@ public class PairsBoard {
                 }
                 keyboard.addRow();
             }
+            showed = false;
         } else {
             for (int i = 0; i < SIZE; i++) {
                 for (int j = 0; j < SIZE; j++) {
@@ -99,9 +105,13 @@ public class PairsBoard {
     }
 
     public void notSelectAll() {
-        tiles.stream()
-                .flatMap(Collection::stream)
-                .filter(PairsTile::isSelect)
-                .forEachOrdered(PairsTile::revertSelect);
+        for (List<PairsTile> list : tiles) {
+            for (PairsTile tile : list) {
+                if (tile.isSelect()) {
+                    tile.revertSelect();
+                    tile.close();
+                }
+            }
+        }
     }
 }
