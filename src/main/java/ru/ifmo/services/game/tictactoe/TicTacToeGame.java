@@ -1,10 +1,13 @@
 package ru.ifmo.services.game.tictactoe;
 
 import org.jetbrains.annotations.NotNull;
+import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,8 +75,20 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @NotNull
     @Override
-    public Byte[] drawPicture(@NotNull Player player) {
-        return new Byte[0];
+    public Keyboard getKeyboard(Player p) {
+        return board.getKeyboard();
+    }
+
+    @NotNull
+    @Override
+    public File drawPicture(@NotNull Player player) {
+        return new File("");
+    }
+
+    @NotNull
+    @Override
+    public GameUpdate getGameUpdate(@NotNull Player player) {
+        return new GameUpdate(getMessage(player), getKeyboard(player), drawPicture(player));
     }
 
     @NotNull
@@ -138,6 +153,10 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     @Override
     public boolean isFinished() {
         return currPlayer == 0 || board.isFull();
+    }
+
+    public boolean isCurrent(Player p) {
+        return (p1.equals(p) && currPlayer > 0) || (p2.equals(p) && currPlayer < 0);
     }
 }
 
