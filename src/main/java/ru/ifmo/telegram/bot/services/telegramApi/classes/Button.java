@@ -24,7 +24,7 @@ public class Button {
         return "{text: *, " + type + ": " + data + "}";
     }
 
-    public JsonObject toJson() {
+    JsonObject toJson() {
         JsonObject object = new JsonObject();
         object.addProperty("text", name);
         object.addProperty(type, data);
