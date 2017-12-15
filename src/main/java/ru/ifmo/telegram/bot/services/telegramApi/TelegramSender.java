@@ -58,7 +58,6 @@ public class TelegramSender {
     public String sendMessage(Long id, String text, Keyboard keyboard) throws TgException {
         logger.info("Sending: " + text + ", to " + id.toString());
         try {
-            URLEncoder encoder =  new URLEncoder();
             List<NameValuePair> nvps = new ArrayList<>();
             nvps.add(new BasicNameValuePair("chat_id", id.toString()));
             nvps.add(new BasicNameValuePair("text", text));
@@ -83,6 +82,20 @@ public class TelegramSender {
             builder.addTextBody("chat_id", id.toString());
             HttpEntity entity = builder.build();
             return sendRequest("sendPhoto", entity);
+        } catch (Exception e){
+            logger.info(e.getMessage());
+            throw new TgException("Error on sendMessage occured.", e);
+        }
+    }
+
+    public String hideKeyboard(Update update) throws TgException {
+        logger.info("hiding keyboard: "  + update.getUpdate_id());
+        try {
+            List<NameValuePair> nvps = new ArrayList<>();
+            nvps.add(new BasicNameValuePair("chat_id", Long.toString(update.getChatId())));
+            nvps.add(new BasicNameValuePair("message_id", Long.toString(update.getMessage_id())));
+            nvps.add(new BasicNameValuePair("reply_markup", new Keyboard().toString()));
+            return sendRequest("editMessageReplyMarkup", new UrlEncodedFormEntity(nvps));
         } catch (Exception e){
             logger.info(e.getMessage());
             throw new TgException("Error on sendMessage occured.", e);
