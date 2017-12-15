@@ -34,7 +34,7 @@ interface Game<in T : Step> {
     /**
      * return playes in game
      */
-    fun getPlayes(): List<Player>
+    fun getPlayers(): List<Player>
 
     fun getGameId(): Games
 

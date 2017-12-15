@@ -85,7 +85,7 @@ class UpdateRequest(
                 }
                 game.surrender(player)
                 sendToPlayer(player, "You left this game")
-                game.getPlayes().forEach {
+                game.getPlayers().forEach {
                     sendToPlayer(it, game.getGameUpdate(it))
                 }
                 removePlayerFromGame(player)
@@ -105,13 +105,13 @@ class UpdateRequest(
                 val resStep = (game as Game<Step>).step(step)
                 sendToPlayer(player, resStep.first)
                 if (resStep.second) {
-                    game.getPlayes()
+                    game.getPlayers()
                             .forEach { sendToPlayer(it, game.getGameUpdate(it)) }
                 } else {
                     sendToPlayer(player, game.getGameUpdate(player))
                 }
                 if (game.isFinished()) {
-                    game.getPlayes().forEach {
+                    game.getPlayers().forEach {
                         sendToPlayer(it, "game finished")
                         removePlayerFromGame(it)
                     }
@@ -261,7 +261,7 @@ class UpdateRequest(
                     sendToPlayer(player, "You can't start game")
                     continue
                 }
-                game.getPlayes().forEach { removePlayerFromPrivateGame(it) }
+                game.getPlayers().forEach { removePlayerFromPrivateGame(it) }
                 startGame(game)
                 continue
             }
@@ -282,7 +282,7 @@ class UpdateRequest(
     }
 
     fun <T : Step> startGame(game: Game<T>) {
-        game.getPlayes().forEach {
+        game.getPlayers().forEach {
             sendToPlayer(it, game.getGameUpdate(it))
         }
     }
