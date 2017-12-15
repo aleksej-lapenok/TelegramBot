@@ -110,7 +110,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     @Override
-    public List<Player> getPlayes() {
+    public List<Player> getPlayers() {
         return Arrays.asList(player1, player2);
     }
 

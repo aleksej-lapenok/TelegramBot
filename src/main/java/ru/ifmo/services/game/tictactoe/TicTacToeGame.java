@@ -81,7 +81,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                         if (board.makeTurn(step.x, step.y, tileState)) {
                             if (checkWinner()) {
                                 state = GameState.WINNER;
-                                return new Pair<>("You won.", Boolean.TRUE);
+                                return new Pair<>("You won.", true);
                             }
                             if (board.isFull()) {
                                 state = GameState.DRAW;
@@ -91,21 +91,16 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                         }
                         return new Pair<>("You made turn.", true);
                     }
-                    return new Pair<>("It is not your game, you can't make turns.", Boolean.FALSE);
+                    return new Pair<>("It is not your game, you can't make turns.", false);
                 }
-                return new Pair<>("It is not your turn. Wait.", Boolean.FALSE);
+                return new Pair<>("It is not your turn. Wait.", false);
             case WINNER:
-                return new Pair<>("You can't make turns, this game has won by " + currPlayer.getName() + ".", Boolean.FALSE);
+                return new Pair<>("You can't make turns, this game has won by " + currPlayer.getName() + ".", false);
             case DRAW:
-                return new Pair<>("You can't make turns, there is a draw.", Boolean.FALSE);
+                return new Pair<>("You can't make turns, there is a draw.", false);
             default:
-                return new Pair<>("Chuck?!?!?!", Boolean.FALSE);
+                return new Pair<>("Chuck?!?!?!", false);
         }
-    }
-
-    @NotNull
-    public Keyboard getKeyboard(Player p) {
-        return board.getKeyboard();
     }
 
 
@@ -134,14 +129,6 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         }
     }
 
-    @NotNull
-    public String getMessage(@NotNull Player player) {
-        return getInfo(player);
-    }
-
-    private String getInfo(Player player) {
-        return getGameUpdate(player).getText();
-    }
 
     @Override
     public void surrender(@NotNull Player player) {
@@ -161,7 +148,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @NotNull
     @Override
-    public List<Player> getPlayes() {
+    public List<Player> getPlayers() {
         return Arrays.asList(p1, p2);
     }
 
