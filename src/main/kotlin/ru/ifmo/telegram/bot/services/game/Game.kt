@@ -3,7 +3,8 @@ package ru.ifmo.telegram.bot.services.game
 import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.services.main.Games
-import java.io.File
+import java.awt.image.RenderedImage
+import java.io.IOException
 
 /**
  *
@@ -17,7 +18,8 @@ interface Game<in T : Step> {
     /**
      * return state of game
      */
-    fun drawPicture(player: Player): File?
+    @Throws(IOException::class)
+    fun drawPicture(player: Player): RenderedImage
 
     fun getGameUpdate(player: Player): GameUpdate
 
