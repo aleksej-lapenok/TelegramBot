@@ -174,12 +174,12 @@ class UpdateRequest(
                     continue
                 }
                 if (privateGame.players.contains(player2)) {
-                    sendToPlayer(player, "${player2.name} in game")
+                    sendToPlayer(player, "${player2.name} already in game")
                     continue
                 }
                 sendToPlayer(player2, "You reserve invention into ${privateGame.game.name} from ${player.name}")
-                sendToPlayer(player2, "Use /accept ${player.name} to accept invention")
-                sendToPlayer(player, "Inventions sent")
+                sendToPlayer(player2, "Use /accept ${player.name} to accept it")
+                sendToPlayer(player, "Inventions was sent")
                 val invent = Invent(privateGame, player2)
                 privateGame.inventions.add(player2)
                 addInvention(player2, invent)
