@@ -12,7 +12,12 @@ import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,6 +25,7 @@ import java.util.List;
  * Created by Cawa on 02.12.2017.
  */
 public class TicTacToeGame<S extends TTTStep> implements Game<S> {
+    private static final File PICTURES_DIRECTORY = new File(TicTacToeGame.class.getClassLoader().getResource("/tictactoe/images").getFile());
     private Player p1, p2, currPlayer;
     private Board board;
     private GameState state;
@@ -105,8 +111,30 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
 
     @Override
-    public File drawPicture(@NotNull Player player) {
-        return null;
+    public RenderedImage drawPicture(@NotNull Player player) throws IOException {
+        String picture = board.toString();
+        Image crossImage = ImageIO.read(new File(PICTURES_DIRECTORY, "krest.png"));
+        Image zeroImage = ImageIO.read(new File(PICTURES_DIRECTORY, "nol.png"));
+        Image fieldImage = ImageIO.read(new File(PICTURES_DIRECTORY, "pole.png"));
+        BufferedImage image = new BufferedImage(90, 90, BufferedImage.TYPE_INT_ARGB);
+        String b[] = picture.split("\\n");
+        char a[] = new char[9];
+        for (int i = 0; i < b.length; i++) {
+            a[i * 3] = b[i].charAt(0);
+            a[i * 3 + 1] = b[i].charAt(1);
+            a[i * 3 + 2] = b[i].charAt(2);
+        }
+        Graphics g = image.getGraphics();
+        g.drawImage(fieldImage, 0, 0, null);
+        for (int i = 0; i < a.length; i++) {
+            if ('0' == a[i]) {
+                g.drawImage(zeroImage, (i % 3) * 30, (i / 3) * 30, null);
+            }
+            if (a[i] == 'x') {
+                g.drawImage(crossImage, (i % 3) * 30, (i / 3) * 30, null);
+            }
+        }
+        return image;
     }
 
     @NotNull
