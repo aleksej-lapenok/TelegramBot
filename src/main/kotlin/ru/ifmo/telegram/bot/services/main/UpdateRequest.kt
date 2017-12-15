@@ -3,6 +3,7 @@ package ru.ifmo.telegram.bot.services.main
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.repository.PlayerRepository
 import ru.ifmo.telegram.bot.services.game.Game
@@ -77,7 +78,7 @@ class UpdateRequest(
                 game.surrender(player)
                 sendToPlayer(player, "You left this game")
                 game.getPlayes().forEach {
-                    sendToPlayer(it, game.getMessage(it))
+                    sendToPlayer(it, game.getGameUpdate(it))
                 }
                 removePlayerFromGame(player)
                 continue
@@ -93,15 +94,14 @@ class UpdateRequest(
                 }
                 val stepFactory = mainGameFactory.getStepFactory(game.getGameId())!!
                 val step = stepFactory.getStep(update.data.substring(update.data.indexOfFirst { it == ' ' } + 1), player)
-                sendToPlayer(player, (game as Game<Step>).step(step).first)
-                game.getPlayes()
-                        .forEach {
-                            if (game.isCurrent(it)) {
-                                sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
-                            } else {
-                                sendToPlayer(it, game.getMessage(it))
-                            }
-                        }
+                val resStep = (game as Game<Step>).step(step)
+                sendToPlayer(player, resStep.first)
+                if (resStep.second) {
+                    game.getPlayes()
+                            .forEach { sendToPlayer(it, game.getGameUpdate(it)) }
+                } else {
+                    sendToPlayer(player, game.getGameUpdate(player))
+                }
                 if (game.isFinished()) {
                     game.getPlayes().forEach {
                         sendToPlayer(it, "game finished")
@@ -264,8 +264,8 @@ class UpdateRequest(
             }
             if (update.data.startsWith("/help")) {
                 sendToPlayer(player, "/game <nameGame> to start game\n" +
-                        "/turn <arguments of turn> to make turn \n" +
-                        "/surrender to exit from game")
+                        "/surrender to exit from game\n" +
+                        "/create <nameGame> to create private game with your friends")
                 sendToPlayer(player, "Game names: ${Games.values().map { it.name }}")
                 continue
             }
@@ -275,17 +275,19 @@ class UpdateRequest(
 
     fun <T : Step> startGame(game: Game<T>) {
         game.getPlayes().forEach {
-            if (game.isCurrent(it)) {
-                sendToPlayer(it, game.getMessage(it), game.getKeyboard(it))
-            } else {
-                sendToPlayer(it, game.getMessage(it))
-            }
+            sendToPlayer(it, game.getGameUpdate(it))
         }
     }
 
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
     fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
     fun sendFileToPlayer(player: Player, file: File) = telegramSender.sendPicture(player.chatId, file)!!
+
+    fun sendToPlayer(player: Player, update: GameUpdate) {
+        sendToPlayer(player, update.text, update.keyboard)
+        if (update.picture != null)
+            sendFileToPlayer(player, update.picture)
+    }
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
         games[player] = game

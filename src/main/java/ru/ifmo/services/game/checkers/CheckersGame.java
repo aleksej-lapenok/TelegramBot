@@ -35,18 +35,18 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @Override
     @NotNull
     public Pair<String, Boolean> step(@NotNull S step) {
-        return new Pair<String, Boolean>(step1(step), Boolean.TRUE);
+        return step1(step);
     }
 
-    public String step1(@NotNull S step) {
+    private Pair<String, Boolean> step1(@NotNull S step) {
         if (currPlayer == 0) {
-            return "Game is won by " + winner.getName();
+            return new Pair<>("Game is won by " + winner.getName(), true);
         }
         if (isFirstTurn) {
             isFirstTurn = false;
             fromX = step.x;
             fromY = step.y;
-            return "Continue your turn!";
+            return new Pair<>("Continue your turn!", false);
         }
         isFirstTurn = true;
         Player player = (currPlayer == 1) ? player1 : player2;
@@ -55,22 +55,21 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
                 if (checkWinner()) {
                     winner = player;
                     currPlayer = 0;
-                    return winner.getName() + " won";
+                    return new Pair<>(winner.getName() + " won", true);
                 } else {
                     currPlayer *= -1;
-                    return "Turn was made";
+                    return new Pair<>("Turn was made", true);
                 }
             } else {
-                return "Wrong turn";
+                return new Pair<>("Wrong turn", false);
             }
         } else {
-            return "Wrong player tried to make turn";
+            return new Pair<>("Wrong player tried to make turn", false);
         }
     }
 
     @NotNull
-    @Override
-    public String getMessage(@NotNull Player player) {
+    private String getMessage(@NotNull Player player) {
         if (player.equals(player1) || player.equals(player2)) {
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {
@@ -127,8 +126,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     }
 
     @NotNull
-    @Override
-    public Keyboard getKeyboard(@NotNull Player player) {
+    private Keyboard getKeyboard(@NotNull Player player) {
         return board.getKeyboard();
     }
 
