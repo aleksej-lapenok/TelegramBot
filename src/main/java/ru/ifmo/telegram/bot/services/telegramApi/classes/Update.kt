@@ -1,4 +1,4 @@
-package ru.ifmo.telegram.bot.services.telegramApi
+package ru.ifmo.telegram.bot.services.telegramApi.classes
 
 
 /**
