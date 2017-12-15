@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Keyboard {
-    List<List<Button>> buttons;
+    private List<List<Button>> buttons;
 
     public Keyboard() {
         buttons = new LinkedList<>();
