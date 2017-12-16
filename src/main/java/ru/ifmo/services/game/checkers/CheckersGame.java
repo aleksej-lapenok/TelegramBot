@@ -6,10 +6,16 @@ import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -148,7 +154,57 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     }
 
     @NotNull
-    public byte[] drawPicture(@NotNull Player player) {
-        return new byte[1];
+    public byte[] drawPicture(@NotNull Player player) throws TgException {
+        String picture = player == player2 ? board.toString() : board.toReverseString();
+        Image whiteImage;
+        Image blackImage;
+        Image whiteDImage;
+        Image blackDImage;
+        Image fieldImage;
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            whiteImage = ImageIO.read(new File(classLoader.getResource("checkers/images/white_cheers.png").getFile()));
+            blackImage = ImageIO.read(new File(classLoader.getResource("checkers/images/black_cheers.png").getFile()));
+            whiteDImage = ImageIO.read(new File(classLoader.getResource("checkers/images/whiteD_cheers.png").getFile()));
+            blackDImage = ImageIO.read(new File(classLoader.getResource("checkers/images/blackD_cheers.png").getFile()));
+            fieldImage = ImageIO.read(new File(classLoader.getResource("checkers/images/cheers_pole.png").getFile()));
+        } catch (Exception e) {
+            throw new TgException("Need game resourses", e);
+        }
+        BufferedImage image = new BufferedImage(260, 260, BufferedImage.TYPE_INT_ARGB);
+        String b[] = picture.split("\\n");
+        char a[] = new char[64];
+        for (int i = 0; i < b.length; i++) {
+            for (int j = 0; j < 8; j++) {
+                a[i * 3 + j] = b[i].charAt(j);
+            }
+        }
+        Graphics g = image.getGraphics();
+        g.drawImage(fieldImage, 0, 0, null);
+        for (int i = 0; i < a.length; i++) {
+            if ('b' == a[i]) {
+                g.drawImage(blackImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+            if (a[i] == 'w') {
+                g.drawImage(whiteImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+            if ('B' == a[i]) {
+                g.drawImage(blackDImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+            if (a[i] == 'W') {
+                g.drawImage(whiteDImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+
+        }
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", baos);
+            baos.flush();
+            byte[] f = baos.toByteArray();
+            baos.close();
+            return f;
+        } catch (IOException e) {
+            throw new TgException("rebuffering error", e);
+        }
     }
 }
