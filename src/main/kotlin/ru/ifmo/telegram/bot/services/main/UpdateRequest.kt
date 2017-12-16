@@ -232,6 +232,7 @@ class UpdateRequest(
                     continue
                 }
                 game.invitations.remove(player)
+                privateGameRepository.save(game)
                 game.players.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
                 game.invitations.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
                 sendToPlayer(player, "You refused invitation")

@@ -1,15 +1,23 @@
 package ru.ifmo.services.game.checkers;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
+import ru.ifmo.services.game.GameException;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +34,27 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         this.currPlayer = 1;
         this.board = new CheckersBoard();
         isFirstTurn = true;
+    }
+
+    CheckersGame(String jsonString, Player player1, Player player2) throws GameException {
+        JsonParser parser = new JsonParser();
+        JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
+        board = new CheckersBoard(gameJson.get("board").getAsJsonObject());
+        if (gameJson.get("player1").getAsLong() == player1.getId() && gameJson.get("player2").getAsLong() == player2.getId()) {
+            this.player1 = player1;
+            this.player2 = player2;
+        } else {
+            if (gameJson.get("player2").getAsLong() == player1.getId() && gameJson.get("player1").getAsLong() == player2.getId()) {
+                this.player2 = player1;
+                this.player1 = player2;
+            } else {
+                throw new GameException("Wrong players for deserialization");
+            }
+        }
+        currPlayer = gameJson.get("currPlayer").getAsLong() == player1.getId() ? 1 : -1;
+        isFirstTurn = gameJson.get("isFirstTurn").getAsBoolean();
+        fromX = gameJson.get("fromX").getAsInt();
+        fromY = gameJson.get("fromY").getAsInt();
     }
 
     private boolean checkWinner() {
@@ -74,7 +103,9 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {
                 sb.append("Current player: ");
-                sb.append(currPlayer == 1 ? player1.getName() : player2.getName());
+                sb.append(currPlayer == 1
+                        ? player1.getName() + " (white)"
+                        : player2.getName() + " (black)");
             } else {
                 if (winner != null) {
                     sb.append("Winner: ");
@@ -84,7 +115,11 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
                 }
             }
             sb.append('\n');
-            sb.append(board.toString());
+            if (player.equals(player1)) {
+                sb.append(board.toString());
+            } else {
+                sb.append(board.toString());
+            }
             return sb.toString();
         } else {
             return "Wrong player";
@@ -94,7 +129,15 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @NotNull
     @Override
     public String toJson() {
-        throw new NotImplementedException();
+        JsonObject object = new JsonObject();
+        object.add("board", board.toJson());
+        object.addProperty("player1", player1.getId());
+        object.addProperty("player2", player2.getId());
+        object.addProperty("currPlayer", currPlayer);
+        object.addProperty("isFirstTurn", isFirstTurn);
+        object.addProperty("fromX", fromX);
+        object.addProperty("fromY", fromY);
+        return object.toString();
     }
 
     @Override
@@ -127,12 +170,12 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     private Keyboard getKeyboard(@NotNull Player player) {
-        return board.getKeyboard();
+        return board.getKeyboard(player.equals(player1));
     }
 
     @NotNull
     @Override
-    public GameUpdate getGameUpdate(@NotNull Player player) {
+    public GameUpdate getGameUpdate(@NotNull Player player) throws TgException {
         return new GameUpdate(getMessage(player), getKeyboard(player), drawPicture(player));
     }
 
@@ -142,7 +185,58 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     }
 
     @NotNull
-    public byte[] drawPicture(@NotNull Player player) {
-        return new byte[1];
+    public byte[] drawPicture(@NotNull Player player) throws TgException {
+        //String picture = player == player1 ? board.toString() : board.toReverseString();
+        String picture = board.toString();
+        Image whiteImage;
+        Image blackImage;
+        Image whiteDImage;
+        Image blackDImage;
+        Image fieldImage;
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            whiteImage = ImageIO.read(new File(classLoader.getResource("checkers/images/white_cheers.png").getFile()));
+            blackImage = ImageIO.read(new File(classLoader.getResource("checkers/images/black_cheers.png").getFile()));
+            whiteDImage = ImageIO.read(new File(classLoader.getResource("checkers/images/whiteD_cheers.png").getFile()));
+            blackDImage = ImageIO.read(new File(classLoader.getResource("checkers/images/blackD_cheers.png").getFile()));
+            fieldImage = ImageIO.read(new File(classLoader.getResource("checkers/images/cheers_pole.png").getFile()));
+        } catch (Exception e) {
+            throw new TgException("Need game resourses", e);
+        }
+        BufferedImage image = new BufferedImage(260, 260, BufferedImage.TYPE_INT_ARGB);
+        String b[] = picture.split("\\n");
+        char a[] = new char[64];
+        for (int i = 0; i < b.length; i++) {
+            for (int j = 0; j < 8; j++) {
+                a[i * 8 + j] = b[i].charAt(j);
+            }
+        }
+        Graphics g = image.getGraphics();
+        g.drawImage(fieldImage, 0, 0, null);
+        for (int i = 0; i < a.length; i++) {
+            if ('b' == a[i]) {
+                g.drawImage(blackImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+            if (a[i] == 'w') {
+                g.drawImage(whiteImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+            if ('B' == a[i]) {
+                g.drawImage(blackDImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+            if (a[i] == 'W') {
+                g.drawImage(whiteDImage, (i % 8) * 30 + 10, (i / 8) * 30 + 10, null);
+            }
+
+        }
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", baos);
+            baos.flush();
+            byte[] f = baos.toByteArray();
+            baos.close();
+            return f;
+        } catch (IOException e) {
+            throw new TgException("rebuffering error", e);
+        }
     }
 }
