@@ -8,7 +8,6 @@ import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
 import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -106,7 +105,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @NotNull
     @Override
     public String toJson() {
-        throw new NotImplementedException();
+        return "";
     }
 
     @Override
@@ -176,7 +175,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         char a[] = new char[64];
         for (int i = 0; i < b.length; i++) {
             for (int j = 0; j < 8; j++) {
-                a[i * 3 + j] = b[i].charAt(j);
+                a[i * 8 + j] = b[i].charAt(j);
             }
         }
         Graphics g = image.getGraphics();

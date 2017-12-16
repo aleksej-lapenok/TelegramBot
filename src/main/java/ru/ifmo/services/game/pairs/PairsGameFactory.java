@@ -31,7 +31,7 @@ public class PairsGameFactory implements GameFactory<PairsStep, PairsGame<PairsS
 
     @NotNull
     @Override
-    public PairsGame<PairsStep> fromJson(@NotNull String json) {
+    public PairsGame<PairsStep> fromJson(@NotNull String json, @NotNull Player... players) {
         throw new NotImplementedException();
     }
 }
