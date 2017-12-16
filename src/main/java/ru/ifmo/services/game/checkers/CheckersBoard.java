@@ -3,8 +3,6 @@ package ru.ifmo.services.game.checkers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import ru.ifmo.services.game.checkers.CheckersUtils.*;
-import ru.ifmo.services.game.tictactoe.Tile;
 import ru.ifmo.services.game.checkers.CheckersUtils.Checker;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
@@ -21,12 +19,23 @@ public class CheckersBoard {
     //(0,0) - top left
     private List<List<CheckersTile>> tiles;
 
+    public CheckersBoard(JsonObject json) {
+        tiles = new ArrayList<>(SIZE);
+        for (JsonElement line : json.get("tiles").getAsJsonArray()) {
+            ArrayList<CheckersTile> lineOfTiles = new ArrayList<>();
+            for (JsonElement t : line.getAsJsonArray()) {
+                lineOfTiles.add(new CheckersTile(t.getAsJsonObject()));
+            }
+            tiles.add(lineOfTiles);
+        }
+    }
+
     Keyboard getKeyboard(boolean reversed) {
         Keyboard keyboard = new Keyboard();
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
-                if (reversed) {
-                    String data = "/turn " + (SIZE - i) + " " + (SIZE - j);
+                if (reversed && false) {
+                    String data = "/turn " + (SIZE - j) + " " + (SIZE - i);
                     keyboard.addButton(new Button("callback_data", data, tiles.get(SIZE - 1 - i).get(SIZE - 1 - j).toString()));
                 } else {
                     String data = "/turn " + (i + 1) + " " + (j + 1);

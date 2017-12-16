@@ -1,15 +1,16 @@
 package ru.ifmo.services.game.checkers;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
+import ru.ifmo.services.game.GameException;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
 import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -33,6 +34,25 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         this.currPlayer = 1;
         this.board = new CheckersBoard();
         isFirstTurn = true;
+    }
+
+    CheckersGame(String jsonString, Player player1, Player player2) throws GameException {
+        JsonParser parser = new JsonParser();
+        JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
+        board = new CheckersBoard(gameJson.get("board").getAsJsonObject());
+        if (gameJson.get("player1").getAsLong() == player1.getId() && gameJson.get("player2").getAsLong() == player2.getId()) {
+            this.player1 = player1;
+            this.player2 = player2;
+        } else {
+            if (gameJson.get("player2").getAsLong() == player1.getId() && gameJson.get("player1").getAsLong() == player2.getId()) {
+                this.player2 = player1;
+                this.player1 = player2;
+            } else {
+                throw new GameException("Wrong players for deserialization");
+            }
+        }
+        currPlayer = gameJson.get("currPlayer").getAsLong() == player1.getId() ? 1 : -1;
+        isFirstTurn = gameJson.get("isFirstTurn").getAsBoolean();
     }
 
     private boolean checkWinner() {
@@ -96,7 +116,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
             if (player.equals(player1)) {
                 sb.append(board.toString());
             } else {
-                sb.append(board.toReverseString());
+                sb.append(board.toString());
             }
             return sb.toString();
         } else {
@@ -112,6 +132,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         object.addProperty("player1", player1.getId());
         object.addProperty("player2", player2.getId());
         object.addProperty("currPlayer", currPlayer);
+        object.addProperty("isFirstTurn", isFirstTurn);
         return object.toString();
     }
 
@@ -161,7 +182,8 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     public byte[] drawPicture(@NotNull Player player) throws TgException {
-        String picture = player == player1 ? board.toString() : board.toReverseString();
+        //String picture = player == player1 ? board.toString() : board.toReverseString();
+        String picture = board.toString();
         Image whiteImage;
         Image blackImage;
         Image whiteDImage;

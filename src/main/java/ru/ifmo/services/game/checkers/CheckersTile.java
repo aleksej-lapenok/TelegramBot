@@ -2,13 +2,18 @@ package ru.ifmo.services.game.checkers;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Contract;
-import ru.ifmo.services.game.checkers.CheckersUtils.*;
+import ru.ifmo.services.game.checkers.CheckersUtils.Checker;
 
 public class CheckersTile {
     private Checker state;
 
     CheckersTile() {
         state = Checker.NONE;
+    }
+
+
+    CheckersTile(JsonObject jsonObject) {
+        state = Checker.valueOf(jsonObject.get("state").getAsString());
     }
 
     @Contract(pure = true)
