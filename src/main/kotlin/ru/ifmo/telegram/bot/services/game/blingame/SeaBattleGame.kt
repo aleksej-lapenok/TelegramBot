@@ -20,6 +20,7 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
 
     constructor(player1: Player, player2: Player, gameJson: JsonObject) : this(player1, player2) {
         game = SBGame(gameJson)
+        game.fromJson(gameJson)
     }
 
     override fun step(step: SeaBattleStep): Pair<String, Boolean> {

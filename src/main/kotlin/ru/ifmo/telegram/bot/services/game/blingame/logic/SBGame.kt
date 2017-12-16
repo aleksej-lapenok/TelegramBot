@@ -9,16 +9,27 @@ class SBGame() {
     private var enemyBoard1: EnemyBoard = EnemyBoard()
     private var enemyBoard2: EnemyBoard = EnemyBoard()
 //    private val myBoards = listOf<MyBoard>(myBoard1, myBoard2)
-    private val myBoards : List<MyBoard>
-    private val enemyBoards : List<EnemyBoard>
+    private var myBoards : List<MyBoard>
+    private var enemyBoards : List<EnemyBoard>
     private var state: GameState = GameState.PlacingShips
 
     constructor(gameJson : JsonObject) : this() {
         state = stateFromJson(gameJson.get("state").asJsonObject)
         myBoard1 = MyBoard(gameJson.get("myBoard1").asJsonObject)
-        myBoard1 = MyBoard(gameJson.get("myBoard2").asJsonObject)
+        myBoard2 = MyBoard(gameJson.get("myBoard2").asJsonObject)
         enemyBoard1 = EnemyBoard(gameJson.get("enemyBoard1").asJsonObject)
-        enemyBoard2 = EnemyBoard(gameJson.get("enemyBoard1").asJsonObject)
+        enemyBoard2 = EnemyBoard(gameJson.get("enemyBoard2").asJsonObject)
+    }
+
+    fun fromJson(gameJson : JsonObject) {
+        state = stateFromJson(gameJson.get("state").asJsonObject)
+        myBoard1 = MyBoard(gameJson.get("myBoard1").asJsonObject)
+        myBoard2 = MyBoard(gameJson.get("myBoard2").asJsonObject)
+        enemyBoard1 = EnemyBoard(gameJson.get("enemyBoard1").asJsonObject)
+        enemyBoard2 = EnemyBoard(gameJson.get("enemyBoard2").asJsonObject)
+
+        myBoards = listOf<MyBoard>(myBoard1, myBoard2)
+        enemyBoards = listOf<EnemyBoard>(enemyBoard1, enemyBoard2)
     }
 
     init {
@@ -120,7 +131,7 @@ class SBGame() {
         json.add("myBoard1", myBoard1.toJson())
         json.add("myBoard2", myBoard2.toJson())
         json.add("enemyBoard1", enemyBoard1.toJson())
-        json.add("enemyBoard1", enemyBoard2.toJson())
+        json.add("enemyBoard2", enemyBoard2.toJson())
         json.add("state", state.toJson())
         return json
     }
