@@ -3,6 +3,7 @@ package ru.ifmo.telegram.bot.services.main
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.entity.PrivateGame
@@ -30,15 +31,16 @@ class UpdateRequest(
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private var lastUpdate = 0L
-    private val games = mutableMapOf<Player, Game<*>>()
+    //    private val games = mutableMapOf<Player, Game<*>>()
     private val query = Games.values().toMutableList().map { it.name to mutableSetOf<Player>() }.toMap()
     //    private val invents = mutableMapOf<Player, MutableList<Invent>>()
-    private val privateGames = mutableMapOf<Player, PrivateGame>()
+//    private val privateGames = mutableMapOf<Player, PrivateGame>()
 
-    private val playersForSave = mutableSetOf<Player>()
-    private val gameToGameDb = mutableMapOf<Game<*>, ru.ifmo.telegram.bot.entity.Game>()
+//    private val playersForSave = mutableSetOf<Player>()
+//    private val gameToGameDb = mutableMapOf<Game<*>, ru.ifmo.telegram.bot.entity.Game>()
 
     @Scheduled(fixedDelay = 1000)
+    @Transactional(readOnly = false)
     fun getUpdates() {
         val response = telegramSender.getUpdates(lastUpdate + 1)
         val result = updatesCollector.getUpdates(response)
@@ -88,7 +90,13 @@ class UpdateRequest(
                 game.getPlayers().forEach {
                     sendToPlayer(it, game.getGameUpdate(it))
                 }
-                removePlayerFromGame(player)
+                player.game!!.json = game.toJson()
+                gameRepository.save(player.game!!)
+                if (game.isFinished()) {
+                    game.getPlayers().forEach { removePlayerFromGame(it) }
+                } else {
+                    removePlayerFromGame(player)
+                }
                 continue
             }
             if (update.data.startsWith("/turn")) {
@@ -110,6 +118,8 @@ class UpdateRequest(
                 } else {
                     sendToPlayer(player, game.getGameUpdate(player))
                 }
+                player.game!!.json = game.toJson()
+                gameRepository.save(player.game!!)
                 if (game.isFinished()) {
                     game.getPlayers().forEach {
                         sendToPlayer(it, "game finished")
@@ -129,7 +139,7 @@ class UpdateRequest(
                     sendToPlayer(player, "You should play in ${privateGame.game.name} or delete it with command /delete or leave with command /leave")
                     continue
                 }
-                val name = update.data.split(" ")[1]
+                val name = update.data.split(" ")[1].toUpperCase()
                 try {
                     Games.valueOf(name)
                 } catch (e: IllegalArgumentException) {
@@ -149,7 +159,7 @@ class UpdateRequest(
                     sendToPlayer(player, "You can't delete game, because you didn't create it")
                     continue
                 }
-                privateGame.players.forEach { removePlayerFromPrivateGame(player) }
+                privateGame.players.forEach { removePlayerFromPrivateGame(it) }
                 privateGame.players.forEach { sendToPlayer(it, "${player.name} deleted this game") }
                 privateGame.invitations.forEach { sendToPlayer(it, "${player.name} deleted game ${privateGame.game.name}, invention not valid") }
 
@@ -249,6 +259,7 @@ class UpdateRequest(
                 }
                 game.players.add(player)
                 game.invitations.remove(player)
+                privateGameRepository.save(game)
 
                 game.players.forEach { sendToPlayer(it, "${player.name} in game") }
                 game.invitations.forEach { sendToPlayer(it, "${player.name} in game") }
@@ -320,8 +331,10 @@ class UpdateRequest(
         } else {
             return null
         }
-        val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = Games.valueOf(name), players = game.getPlayes().toSet())
+        val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = Games.valueOf(name))
         gameRepository.save(gameDB)
+        game.getPlayers().forEach { it.game = gameDB }
+        playerRepository.save(game.getPlayers())
         return game
     }
 
@@ -335,15 +348,20 @@ class UpdateRequest(
     }
 
     fun getGameByPlayer(player: Player): Game<*>? {
-        val gameDB = player.game!!
+        val gameDB = player.game ?: return null
         val factory = mainGameFactory.getGameFactory(gameDB.game)!!
-        return factory.fromJson(gameDB.json)
+        val players = playerRepository.findByGame(gameDB)
+        return factory.fromJson(gameDB.json, *players.toTypedArray())
     }
 
     fun getPrivateGameByPlayer(player: Player) = player.privateGame
 
     fun createPrivateGame(player: Player, game: String) {
-        privateGameRepository.save(PrivateGame(game = Games.valueOf(game), creator = player))
+        val prGame = PrivateGame(game = Games.valueOf(game), creator = player)
+        privateGameRepository.save(prGame)
+        player.privateGame = prGame
+        playerRepository.save(player)
+        query.values.forEach { it.remove(player) }
     }
 
     fun tryToGetPrivateGame(player: Player): Game<*>? {
@@ -356,8 +374,10 @@ class UpdateRequest(
         } else {
             return null
         }
-        val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = privateGame.game, players = game.getPlayes().toSet())
+        val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = privateGame.game)
         gameRepository.save(gameDB)
+        game.getPlayers().forEach { it.game = gameDB }
+        playerRepository.save(game.getPlayers())
         return game
     }
 
