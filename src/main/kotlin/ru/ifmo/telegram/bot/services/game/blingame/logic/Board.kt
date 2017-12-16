@@ -1,9 +1,17 @@
 package ru.ifmo.telegram.bot.services.game.blingame.logic
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import ru.ifmo.telegram.bot.services.game.blingame.logic.GamePrefs.BOARD_SIZE
 
-abstract class Board {
-    protected val board = MutableList(GamePrefs.BOARD_SIZE, { MutableList<Tile>(GamePrefs.BOARD_SIZE, { Tile.Empty }) })
+abstract class Board() {
+    protected var board = MutableList(GamePrefs.BOARD_SIZE, { MutableList<Tile>(GamePrefs.BOARD_SIZE, { Tile.Empty }) })
+
+    constructor(gameJson : JsonObject) : this() {
+        board = mutableListOf()
+        val tiles = gameJson.get("tiles").asJsonArray
+        board = tiles.map { it.asJsonArray.map { Tile.tileFromJson(it.asJsonObject) }.toMutableList() }.toMutableList()
+    }
 
     fun stringRep(): String {
         val sb = StringBuilder()
@@ -26,6 +34,20 @@ abstract class Board {
         return sb.toString()
     }
 
+    open fun toJson(): JsonObject {
+        val array = JsonArray()
+        for (list in board) {
+            val local = JsonArray()
+            for (t in list) {
+                local.add(t.toJson())
+            }
+            array.add(local)
+        }
+        val k = JsonObject()
+        k.add("tiles", array)
+        return k
+    }
+
     companion object {
         fun coordsInBounds(x: Int, y: Int): Boolean {
             return x in 0..BOARD_SIZE && y in 0..BOARD_SIZE
@@ -33,7 +55,7 @@ abstract class Board {
 
         sealed class MoveResult {
             object Miss : MoveResult()
-            data class Hit(val isKilled: Boolean = false) : MoveResult()
+            object Hit : MoveResult()
         }
     }
 }

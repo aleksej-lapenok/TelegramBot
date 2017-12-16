@@ -1,13 +1,27 @@
 package ru.ifmo.telegram.bot.services.game.blingame.logic
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+
 class SBGame() {
-    val myBoard1: MyBoard = MyBoard()
-    val myBoard2: MyBoard = MyBoard()
-    val enemyBoard1: EnemyBoard = EnemyBoard()
-    val enemyBoard2: EnemyBoard = EnemyBoard()
-    val myBoards = listOf<MyBoard>(myBoard1, myBoard2)
-    val enemyBoards = listOf<EnemyBoard>(enemyBoard1, enemyBoard2)
-    var state: GameState = GameState.PlacingShips
+    private var myBoard1: MyBoard = MyBoard()
+    private var myBoard2: MyBoard = MyBoard()
+    private var enemyBoard1: EnemyBoard = EnemyBoard()
+    private var enemyBoard2: EnemyBoard = EnemyBoard()
+//    private val myBoards = listOf<MyBoard>(myBoard1, myBoard2)
+    private val myBoards : List<MyBoard>
+    private val enemyBoards : List<EnemyBoard>
+    private var state: GameState = GameState.PlacingShips
+
+    constructor(gameJson : JsonObject) : this() {
+        state = stateFromJson(gameJson.get("state").asJsonObject)
+        myBoard1 = MyBoard()
+    }
+
+    init {
+        myBoards = listOf<MyBoard>(myBoard1, myBoard2)
+        enemyBoards = listOf<EnemyBoard>(enemyBoard1, enemyBoard2)
+    }
 
     fun getGameState(): GameState = state
 
@@ -60,10 +74,51 @@ class SBGame() {
     companion object {
         private fun nextPlayerId(i: Int) = (i + 1) % 2
 
-        sealed class GameState {
-            object PlacingShips : GameState()
-            data class PlayerTurn(val playerId: Int) : GameState()
-            data class GameEnded(val winnerId: Int) : GameState()
+        private fun stateFromJson(json: JsonObject) : GameState {
+            return when(json.get("name").asString) {
+                "PlacingShips" -> GameState.PlacingShips
+                "PlayerTurn" -> GameState.PlayerTurn(json.get("val").asInt)
+                "GameEnded" -> GameState.GameEnded(json.get("val").asInt)
+                else -> throw Exception()
+            }
         }
+
+        sealed class GameState {
+            abstract fun toJson(): JsonObject
+
+            object PlacingShips : GameState() {
+                override fun toJson(): JsonObject {
+                    val json = JsonObject()
+                    json.addProperty("name", "PlacingShips")
+                    return json
+                }
+            }
+            data class PlayerTurn(val playerId: Int) : GameState() {
+                override fun toJson(): JsonObject {
+                    val json = JsonObject()
+                    json.addProperty("name", "PlayerTurn")
+                    json.addProperty("val", playerId)
+                    return json
+                }
+            }
+            data class GameEnded(val winnerId: Int) : GameState() {
+                override fun toJson(): JsonObject {
+                    val json = JsonObject()
+                    json.addProperty("name", "GameEnded")
+                    json.addProperty("val", winnerId)
+                    return json
+                }
+            }
+        }
+    }
+
+    fun toJson(): JsonObject {
+        val json = JsonObject()
+        json.add("myBoard1", myBoard1.toJson())
+        json.add("myBoard2", myBoard2.toJson())
+        json.add("enemyBoard1", enemyBoard1.toJson())
+        json.add("enemyBoard1", enemyBoard2.toJson())
+        json.add("state", state.toJson())
+        return json
     }
 }

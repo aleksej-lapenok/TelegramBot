@@ -1,13 +1,40 @@
 package ru.ifmo.telegram.bot.services.game.blingame.logic
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import ru.ifmo.telegram.bot.services.game.blingame.logic.GamePrefs.BOARD_SIZE
 
-class MyBoard() : Board() {
-    private val ships = mutableListOf<MyShip>()
-    private val shipsRemainToPlace = GamePrefs.SHIP_TYPES_COUNT.toMutableMap()
+class MyBoard : Board {
+    private var shipsRemainToPlace = GamePrefs.SHIP_TYPES_COUNT.toMutableMap()
+
+    constructor() : super()
+
+    constructor(gameJson : JsonObject) : super(gameJson) {
+        val map = mutableMapOf<Int, Int>()
+        for (pair in gameJson.get("shipsRemainToPlace").asJsonArray) {
+            val obj = pair.asJsonObject
+            val k = obj.get("key").asInt
+            val v = obj.get("val").asInt
+            map.put(k, v)
+        }
+        shipsRemainToPlace = map
+    }
 
     fun getShipsRemainToPlace(): Map<Int, Int> {
         return shipsRemainToPlace
+    }
+
+    override fun toJson(): JsonObject {
+        val json = super.toJson()
+        val array = JsonArray()
+        for ((k, v) in shipsRemainToPlace) {
+            val obj = JsonObject()
+            obj.addProperty("key", k)
+            obj.addProperty("val", v)
+            array.add(obj)
+        }
+        json.add("shipsRemainToPlace", array)
+        return json
     }
 
     fun placeShip(size: Int,
@@ -27,7 +54,6 @@ class MyBoard() : Board() {
             return ShipPlaceResult.Intersects
         }
         val tiles = coordsList.map { Tile.MyShipTile() }
-        ships.add(MyShip(tiles))
         for ((i, p) in coordsList.withIndex()) {
             val (xx, yy) = p
             board[xx][yy] = tiles[i]
@@ -38,11 +64,7 @@ class MyBoard() : Board() {
 
     fun isAllShipsPlaced(): Boolean = shipsRemainToPlace.values.sum() == 0
 
-    fun getBoardAndShips(): Pair<List<List<Tile>>, List<MyShip>> {
-        return Pair(board, ships)
-    }
-
-    fun isAllShipsWrecked() = ships.all { it.isWrecked() }
+    fun isAllShipsWrecked() = board.all { it.all { it is Tile.MyShipTile && it.isWrecked } }
 
     fun makeMove(x: Int, y: Int): MoveResult {
         val tile = board[x][y]
@@ -57,11 +79,7 @@ class MyBoard() : Board() {
                     MoveResult.Miss
                 } else {
                     tile.isWrecked = true
-                    if (tile.ship.isWrecked()) {
-                        MoveResult.Hit(true)
-                    } else {
-                        MoveResult.Hit(false)
-                    }
+                    MoveResult.Hit
                 }
             }
             is Tile.EnemyShipTile -> throw Exception("must not be here")

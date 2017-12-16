@@ -1,5 +1,8 @@
 package ru.ifmo.telegram.bot.services.game.blingame
 
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import ru.ifmo.services.game.GameException
 import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.services.game.Game
@@ -10,10 +13,14 @@ import ru.ifmo.telegram.bot.services.main.Games
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
 import java.util.regex.Pattern
 
-class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
+class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleStep> {
     val playerss = listOf<Player>(player1, player2)
-    val game = SBGame()
+    var game = SBGame()
     val kboard = Keyboard()
+
+    constructor(player1: Player, player2: Player, gameJson: JsonObject) : this(player1, player2) {
+        game = SBGame(gameJson)
+    }
 
     override fun step(step: SeaBattleStep): Pair<String, Boolean> {
         val state = game.getGameState()
@@ -62,9 +69,9 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
         if (args.size < 4) {
             return null
         }
-        var x = 0
-        var y = 0
-        var size = 0
+        val x : Int
+        val y : Int
+        val size : Int
         try {
             y = args[1].toInt()
             size = args[2].toInt()
@@ -91,8 +98,8 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
         if (args.size < 2) {
             return null
         }
-        var x = 0
-        var y = 0
+        val x : Int
+        val y : Int
         try {
             y = args[1].toInt()
             if (args[1][0] in 'a' .. 'j') {
@@ -110,7 +117,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
 
     override fun getGameUpdate(player: Player): GameUpdate {
         val state = game.getGameState()
-        val (my, enemy) = game.getBoards(playerToId(player))
+        val (my, _) = game.getBoards(playerToId(player))
         val playerId = playerToId(player)
         val msg = when(state) {
             is SBGame.Companion.GameState.PlacingShips -> run {
@@ -119,7 +126,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
             }
             is SBGame.Companion.GameState.PlayerTurn -> run {
                 val bstr = getBoardsString(player)
-                "Make your move"
+                "$bstr\nMake your move"
             }
             is SBGame.Companion.GameState.GameEnded -> "Winner name: ${player.name}"
         }
@@ -159,7 +166,15 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
     }
 
     override fun toJson(): String {
-        TODO()
+        return toJsonJson().toString()
+    }
+
+    fun toJsonJson(): JsonObject {
+        val json = JsonObject()
+        json.addProperty("p1", player1.id)
+        json.addProperty("p2", player2.id)
+        json.add("game", game.toJson())
+        return json
     }
 
     override fun getGameId(): Games {
