@@ -13,12 +13,11 @@ import ru.ifmo.telegram.bot.repository.PrivateGameRepository
 import ru.ifmo.telegram.bot.services.game.Game
 import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
-import ru.ifmo.telegram.bot.services.telegramApi.classes.TypeUpdate
-import ru.ifmo.telegram.bot.services.telegramApi.classes.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
-import java.io.File
+import ru.ifmo.telegram.bot.services.telegramApi.classes.TypeUpdate
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Update
 
 @Service
 class UpdateRequest(
@@ -315,6 +314,7 @@ class UpdateRequest(
     fun addPlayerInPrivateGame(player: Player, privateGame: PrivateGame) {
         player.privateGame = privateGame
         playerRepository.save(player)
+        query.values.forEach { it.remove(player) }
 //        privateGames[player] = privateGame
     }
 
