@@ -1,6 +1,6 @@
 package ru.ifmo.services.game.checkers;
 
-import ru.ifmo.services.game.checkers.CheckersUtils.*;
+import ru.ifmo.services.game.checkers.CheckersUtils.Checker;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
@@ -21,7 +21,7 @@ public class CheckersBoard {
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
                 if (reversed) {
-                    String data = "/turn " + (SIZE + 2 - i) + " " + (SIZE + 2 - j);
+                    String data = "/turn " + (SIZE - i) + " " + (SIZE - j);
                     keyboard.addButton(new Button("callback_data", data, tiles.get(SIZE - 1 - i).get(SIZE - 1 - j).toString()));
                 } else {
                     String data = "/turn " + (i + 1) + " " + (j + 1);

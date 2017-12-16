@@ -144,7 +144,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     @Override
-    public GameUpdate getGameUpdate(@NotNull Player player) {
+    public GameUpdate getGameUpdate(@NotNull Player player) throws TgException {
         return new GameUpdate(getMessage(player), getKeyboard(player), drawPicture(player));
     }
 
