@@ -73,6 +73,7 @@ public class TelegramSender {
         List<NameValuePair> nvps = new ArrayList<>();
         nvps.add(new BasicNameValuePair("chat_id", id.toString()));
         nvps.add(new BasicNameValuePair("text", text));
+        nvps.add(new BasicNameValuePair("parse_mode", "markdown"));
         nvps.add(new BasicNameValuePair("reply_markup", keyboard.toJson().toString()));
         return encodeAndSendRequest("sendMessage", nvps);
     }
