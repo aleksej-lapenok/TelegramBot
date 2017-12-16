@@ -35,7 +35,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
                         "Ti pidor: cant parse your shit"
                     }
                 }
-                return Pair(msg, false)
+                return Pair("$msg\n'${step.command}'", false)
             }
             is SBGame.Companion.GameState.PlayerTurn -> if (state.playerId == playerToId(step.player)) {
                 val args = parseAttack(step)
