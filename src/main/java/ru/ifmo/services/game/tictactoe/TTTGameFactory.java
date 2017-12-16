@@ -2,9 +2,9 @@ package ru.ifmo.services.game.tictactoe;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
-import ru.ifmo.services.game.GameException;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.GameFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Service
 public class TTTGameFactory implements GameFactory<TTTStep, TicTacToeGame<TTTStep>> {
@@ -33,12 +33,9 @@ public class TTTGameFactory implements GameFactory<TTTStep, TicTacToeGame<TTTSte
 
     @NotNull
     @Override
-    public TicTacToeGame<TTTStep> fromJson(@NotNull String json, @NotNull Player... player) {
-        assert player.length == 2;
-        try {
-            return new TicTacToeGame<>(json, player[0], player[1]);
-        } catch (GameException e) {
-            throw new RuntimeException();
-        }
+    public TicTacToeGame<TTTStep> fromJson(@NotNull String json) {
+        throw new NotImplementedException();
+//        return null;
+        //todo: write this method
     }
 }

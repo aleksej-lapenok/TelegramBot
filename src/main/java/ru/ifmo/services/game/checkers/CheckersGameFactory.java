@@ -31,7 +31,7 @@ public class CheckersGameFactory implements GameFactory<CheckersStep, CheckersGa
 
     @NotNull
     @Override
-    public CheckersGame<CheckersStep> fromJson(@NotNull String json, @NotNull Player... player) {
+    public CheckersGame<CheckersStep> fromJson(@NotNull String json) {
         throw new NotImplementedException();
     }
 }
