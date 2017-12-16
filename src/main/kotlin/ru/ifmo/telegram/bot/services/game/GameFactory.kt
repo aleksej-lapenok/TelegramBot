@@ -7,7 +7,7 @@ interface GameFactory<in T : Step, out E : Game<T>> {
     fun minNumberPlayers(): Int
     fun getGame(vararg player: Player): E
     fun getInfo(): String
-    fun fromJson(json: String): E
+    fun fromJson(json: String, vararg player: Player): E
 }
 
 interface StepFactory<out T : Step> {
