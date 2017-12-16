@@ -142,10 +142,10 @@ public class CheckersBoard {
         }
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
-                if (i < 3 && i % 2 == j % 2) {
+                if (i < 3 && i % 2 != j % 2) {
                     tiles.get(i).get(j).setChecker(Checker.WHITE_SIMPLE);
                 }
-                if (i > 4 && i % 2 == j % 2) {
+                if (i > 4 && i % 2 != j % 2) {
                     tiles.get(i).get(j).setChecker(Checker.BLACK_SIMPLE);
                 }
             }
@@ -160,6 +160,17 @@ public class CheckersBoard {
                 sb.append(tile.toString());
             }
             sb.append('\n');
+        }
+        return sb.toString();
+    }
+
+    public String toReverseString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = SIZE - 1; i >= 0; i--) {
+            for (int j = SIZE - 1; j >= 0; j--) {
+                sb.append(tiles.get(i).get(j).toString());
+            }
+            sb.append("\n");
         }
         return sb.toString();
     }

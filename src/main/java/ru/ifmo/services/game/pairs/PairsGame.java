@@ -63,9 +63,8 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
     }
 
     @NotNull
-    @Override
-    public File drawPicture(@NotNull Player player) {
-        return new File("");
+    public byte[] drawPicture(@NotNull Player player) {
+        return null;
     }
 
     @NotNull
@@ -109,7 +108,7 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
 
     @NotNull
     @Override
-    public List<Player> getPlayes() {
+    public List<Player> getPlayers() {
         return Collections.singletonList(player);
     }
 

@@ -86,7 +86,11 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
                 }
             }
             sb.append('\n');
-            sb.append(board.toString());
+            if (player.equals(player1)) {
+                sb.append(board.toString());
+            } else {
+                sb.append(board.toReverseString());
+            }
             return sb.toString();
         } else {
             return "Wrong player";
