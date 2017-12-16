@@ -32,16 +32,16 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
                         val (x, y, size, dir) = args
                         val res = game.placeShip(playerToId(step.player), x, y, size, dir)
                         when(res) {
-                            is MyBoard.Companion.ShipPlaceResult.OutOfBounds -> "Ti pidor: out of bounds"
-                            is MyBoard.Companion.ShipPlaceResult.NoShipsOfSuchSize -> "Ti pidor: no ships of such size"
-                            is MyBoard.Companion.ShipPlaceResult.Intersects -> "Ti pidor: ships intersect"
-                            is MyBoard.Companion.ShipPlaceResult.ShipPlaceOK -> "Ti ne pidor"
+                            is MyBoard.Companion.ShipPlaceResult.OutOfBounds -> "Error: out of bounds"
+                            is MyBoard.Companion.ShipPlaceResult.NoShipsOfSuchSize -> "Error: no ships of such size"
+                            is MyBoard.Companion.ShipPlaceResult.Intersects -> "Error: ships intersect"
+                            is MyBoard.Companion.ShipPlaceResult.ShipPlaceOK -> "All ok"
                         }
                     } else {
-                        "Ti pidor: cant parse your shit"
+                        "Error: cant parse your input"
                     }
                 }
-                return Pair("$msg\n'${step.command}'", false)
+                return Pair(msg, false)
             }
             is SBGame.Companion.GameState.PlayerTurn -> if (state.playerId == playerToId(step.player)) {
                 val args = parseAttack(step)
@@ -49,18 +49,18 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
                     val (x, y) = args
                     if (Board.coordsInBounds(x, y)) {
                         game.makeMove(playerToId(step.player), x, y)
-                        return Pair("Ti ne pidor", true)
+                        return Pair("All ok", true)
                     } else {
-                        return Pair("Ti pidor: out of bounds", false)
+                        return Pair("Error: out of bounds", false)
                     }
                 } else {
-                    return Pair("Ti pidor: cant parse your shit", false)
+                    return Pair("Error: cant parse your input", false)
                 }
             } else {
-                return Pair("Ti pidor: not your turn", false)
+                return Pair("Error: not your turn", false)
             }
             is SBGame.Companion.GameState.GameEnded ->
-                return Pair("Ti pidor: game won by ${playerss[game.whoIsWinner()].name}", false)
+                return Pair("Error: game won by ${playerss[game.whoIsWinner()].name}", false)
         }
     }
 
@@ -75,7 +75,7 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
         try {
             y = args[1].toInt()
             size = args[2].toInt()
-            if (args[1][0] in 'a' .. 'j') {
+            if (args[0][0] in 'a' .. 'j') {
                 x = args[0][0] - 'a'
             } else {
                 throw Exception()
@@ -102,8 +102,8 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
         val y : Int
         try {
             y = args[1].toInt()
-            if (args[1][0] in 'a' .. 'j') {
-                x = args[1][0] - 'a'
+            if (args[0][0] in 'a' .. 'j') {
+                x = args[0][0] - 'a'
             } else {
                 throw Exception()
             }
@@ -141,7 +141,6 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
         sb.append(getBoardString(my))
         sb.append("Enemy board:\n")
         sb.append(getBoardString(enemy))
-        sb.append("pssst... Ti pidor :з\n")
         return sb.toString()
     }
 
