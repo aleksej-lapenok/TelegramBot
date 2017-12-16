@@ -1,5 +1,6 @@
 package ru.ifmo.services.game.checkers;
 
+import com.google.gson.JsonObject;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import ru.ifmo.services.game.GameUpdate;
@@ -8,7 +9,6 @@ import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
 import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -106,7 +106,12 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     @NotNull
     @Override
     public String toJson() {
-        throw new NotImplementedException();
+        JsonObject object = new JsonObject();
+        object.add("board", board.toJson());
+        object.addProperty("player1", player1.getId());
+        object.addProperty("player2", player2.getId());
+        object.addProperty("currPlayer", currPlayer);
+        return object.toString();
     }
 
     @Override

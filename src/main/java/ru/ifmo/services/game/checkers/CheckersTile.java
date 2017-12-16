@@ -1,5 +1,6 @@
 package ru.ifmo.services.game.checkers;
 
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Contract;
 import ru.ifmo.services.game.checkers.CheckersUtils.*;
 
@@ -45,5 +46,11 @@ public class CheckersTile {
 
     boolean equals(CheckersTile obj) {
         return state.equals(obj.state);
+    }
+
+    public JsonObject toJson() {
+        JsonObject object = new JsonObject();
+        object.addProperty("state", state.toString());
+        return object;
     }
 }
