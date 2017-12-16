@@ -1,5 +1,10 @@
 package ru.ifmo.services.game.checkers;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import ru.ifmo.services.game.checkers.CheckersUtils.*;
+import ru.ifmo.services.game.tictactoe.Tile;
 import ru.ifmo.services.game.checkers.CheckersUtils.Checker;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
@@ -173,5 +178,19 @@ public class CheckersBoard {
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    public JsonElement toJson() {
+        JsonArray array = new JsonArray();
+        for (List<CheckersTile> list : tiles) {
+            JsonArray local = new JsonArray();
+            for (CheckersTile t : list) {
+                local.add(t.toJson());
+            }
+            array.add(local);
+        }
+        JsonObject k = new JsonObject();
+        k.add("tiles", array);
+        return k;
     }
 }
