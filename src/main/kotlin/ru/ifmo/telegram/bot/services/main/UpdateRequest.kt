@@ -281,12 +281,12 @@ class UpdateRequest(
 
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
     fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
-    fun sendFileToPlayer(player: Player, file: File) = telegramSender.sendPicture(player.chatId, file)!!
+    fun sendFileToPlayer(player: Player, file: ByteArray) = telegramSender.sendPicture(player.chatId, file)!!
 
     fun sendToPlayer(player: Player, update: GameUpdate) {
-        sendToPlayer(player, update.text, update.keyboard)
         if (update.picture != null)
             sendFileToPlayer(player, update.picture)
+        sendToPlayer(player, update.text, update.keyboard)
     }
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
