@@ -7,8 +7,11 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Update;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -51,7 +55,9 @@ public class TelegramSender {
             String url = "https://api.telegram.org/bot" + token + "/" + type;
             HttpPost httpPost = new HttpPost(url);
             httpPost.setEntity(entity);
-            return IOUtils.toString(httpclient.execute(httpPost).getEntity().getContent(), "UTF-8");
+            String ans = IOUtils.toString(httpclient.execute(httpPost).getEntity().getContent(), "UTF-8");
+            logger.info(ans);
+            return ans;
         } catch (IOException e) {
             logger.info(e.getMessage());
             throw new TgException("Error on " + type + " occured.", e);
@@ -67,17 +73,18 @@ public class TelegramSender {
         List<NameValuePair> nvps = new ArrayList<>();
         nvps.add(new BasicNameValuePair("chat_id", id.toString()));
         nvps.add(new BasicNameValuePair("text", text));
+        nvps.add(new BasicNameValuePair("parse_mode", "markdown"));
         nvps.add(new BasicNameValuePair("reply_markup", keyboard.toJson().toString()));
         return encodeAndSendRequest("sendMessage", nvps);
     }
 
 
-    public String sendPicture(Long id, File file) throws TgException {
-        logger.info("Sending: " + file.getName() + ", to " + id.toString());
-        FileBody fileBody = new FileBody(file, ContentType.DEFAULT_BINARY);
+    public String sendPicture(Long id, byte[] file) throws TgException {
+        logger.info("Sending: " + "file" + ", to " + id.toString());
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        ContentBody cd = new InputStreamBody(new ByteArrayInputStream(file), "file");
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        builder.addPart("photo", fileBody);
+        builder.addPart("photo", cd);
         builder.addTextBody("chat_id", id.toString());
         HttpEntity entity = builder.build();
         return sendRequest("sendPhoto", entity);
