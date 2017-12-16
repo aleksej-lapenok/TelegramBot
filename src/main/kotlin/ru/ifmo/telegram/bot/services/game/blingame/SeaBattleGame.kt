@@ -211,7 +211,7 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
 
     @Throws(TgException::class)
     fun drawPicture(@NotNull player:Player):ByteArray {
-        val picture = game.getBoards(playerToId(player))
+        val picture = game.getBoards(playerToId(player)).first
         val shipImage: Image
         val crash_shipImage:Image
         val bombImage:Image
