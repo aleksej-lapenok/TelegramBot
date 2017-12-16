@@ -1,9 +1,7 @@
 package ru.ifmo.telegram.bot.services.game.blingame
 
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.sun.istack.internal.NotNull
-import ru.ifmo.services.game.GameException
 import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
 import ru.ifmo.telegram.bot.services.game.Game
@@ -18,7 +16,6 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
-import java.util.regex.Pattern
 import javax.imageio.ImageIO
 
 class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleStep> {
@@ -212,7 +209,7 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
 
     @Throws(TgException::class)
     fun drawPicture(@NotNull player:Player):ByteArray {
-        val picture = game.getBoards(playerToId(player)).first
+        val picture = game.getBoards(playerToId(player)).first.stringRep()
         val shipImage: Image
         val crash_shipImage:Image
         val bombImage:Image
