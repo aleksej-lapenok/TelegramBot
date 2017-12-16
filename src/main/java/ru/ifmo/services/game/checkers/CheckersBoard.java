@@ -1,7 +1,6 @@
 package ru.ifmo.services.game.checkers;
 
 import ru.ifmo.services.game.checkers.CheckersUtils.*;
-import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
