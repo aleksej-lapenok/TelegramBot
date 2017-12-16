@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Update;
 
+import java.beans.Encoder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class TelegramSender {
 
     private String encodeAndSendRequest(String type, List<NameValuePair> nvps) throws TgException{
         try {
-            return sendRequest(type, new UrlEncodedFormEntity(nvps));
+            return sendRequest(type, new UrlEncodedFormEntity(nvps, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             throw new TgException(e);
         }
@@ -55,6 +56,7 @@ public class TelegramSender {
             String url = "https://api.telegram.org/bot" + token + "/" + type;
             HttpPost httpPost = new HttpPost(url);
             httpPost.setEntity(entity);
+
             String ans = IOUtils.toString(httpclient.execute(httpPost).getEntity().getContent(), "UTF-8");
             logger.info(ans);
             return ans;
