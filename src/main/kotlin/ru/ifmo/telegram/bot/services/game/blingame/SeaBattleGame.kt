@@ -9,6 +9,7 @@ import ru.ifmo.telegram.bot.services.game.blingame.logic.SBGame
 import ru.ifmo.telegram.bot.services.main.Games
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
 import java.io.File
+import java.util.regex.Pattern
 
 class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
     val players = listOf<Player>(player1, player2)
@@ -58,7 +59,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
     }
 
     private fun parsePlacingShips(step: SeaBattleStep) : placeShipArgs? {
-        val args = step.command.split(" ");
+        val args = step.command.split(Pattern.compile("\n+"));
         if (args.size < 4) {
             return null
         }
@@ -141,7 +142,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
     private fun getRemainingSHipsString(ships: Map<Int, Int>): String {
         val sb = StringBuilder()
         for ((k, v) in ships) {
-            sb.append("$k tiles: v \n")
+            sb.append("$k tiles: $v \n")
         }
         return sb.toString()
     }
