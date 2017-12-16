@@ -53,6 +53,8 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         }
         currPlayer = gameJson.get("currPlayer").getAsLong() == player1.getId() ? 1 : -1;
         isFirstTurn = gameJson.get("isFirstTurn").getAsBoolean();
+        fromX = gameJson.get("fromX").getAsInt();
+        fromY = gameJson.get("fromY").getAsInt();
     }
 
     private boolean checkWinner() {
@@ -133,6 +135,8 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
         object.addProperty("player2", player2.getId());
         object.addProperty("currPlayer", currPlayer);
         object.addProperty("isFirstTurn", isFirstTurn);
+        object.addProperty("fromX", fromX);
+        object.addProperty("fromY", fromY);
         return object.toString();
     }
 
