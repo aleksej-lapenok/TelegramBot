@@ -5,18 +5,18 @@ import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 import java.io.File;
 
 public class GameUpdate {
-    private final File picture;
+    private final byte[] picture;
     private final String text;
     private final Keyboard keyboard;
 
-    public GameUpdate(String message, Keyboard keyboard, File file) {
+    public GameUpdate(String message, Keyboard keyboard, byte[] file) {
         this.text = message;
         this.keyboard = keyboard;
         this.picture = file;
     }
 
-    GameUpdate(String message, File file) {
-        this(message, null, file);
+    GameUpdate(String message, byte[] file) {
+        this(message, new Keyboard(), file);
     }
 
     public String getText() {
@@ -27,7 +27,7 @@ public class GameUpdate {
         return keyboard;
     }
 
-    public File getPicture() {
+    public byte[] getPicture() {
         return picture;
     }
 }

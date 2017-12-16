@@ -5,13 +5,22 @@ import com.google.gson.JsonParser;
 import kotlin.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import ru.ifmo.services.game.GameException;
 import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.*;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,6 +28,7 @@ import java.util.List;
  * Created by Cawa on 02.12.2017.
  */
 public class TicTacToeGame<S extends TTTStep> implements Game<S> {
+    //private static final File PICTURES_DIRECTORY = new File(TicTacToeGame.class.getClassLoader().getResource("/tictactoe/images").getFile());
     private Player p1, p2, currPlayer;
     private Board board;
     private GameState state;
@@ -31,25 +41,32 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         board = new Board();
     }
 
-    TicTacToeGame(String jsonString) {
+    TicTacToeGame(String jsonString, Player player1, Player player2) throws GameException {
         JsonParser parser = new JsonParser();
         JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
         state = GameState.valueOf(gameJson.get("state").getAsString());
         board = new Board(gameJson.get("board").getAsJsonObject());
-        // TODO: players from json
-        p1 = null;
-        p2 = null;
-        currPlayer = null;
+        if (gameJson.get("p1").getAsLong() == player1.getId() && gameJson.get("p2").getAsLong() == player2.getId()) {
+            p1 = player1;
+            p2 = player2;
+        } else {
+            if (gameJson.get("p2").getAsLong() == player1.getId() && gameJson.get("p1").getAsLong() == player2.getId()) {
+                p2 = player1;
+                p1 = player2;
+            } else {
+                throw new GameException("Wrong players for deserialization");
+            }
+        }
+        currPlayer = gameJson.get("currPlayer").getAsLong() == player1.getId() ? player1 : player2;
     }
 
     public JsonObject toJsonObject() {
         JsonObject object = new JsonObject();
         object.add("board", board.toJson());
         object.addProperty("state", state.toString());
-        // TODO: players to json
-//        object.addProperty("p1", p1.toString());
-//        object.addProperty("p2", p2.toString());
-//        object.addProperty("currPlayer", currPlayer.toString());
+        object.addProperty("p1", p1.getId());
+        object.addProperty("p2", p2.getId());
+        object.addProperty("currPlayer", currPlayer.getId());
         return object;
     }
 
@@ -73,7 +90,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                         if (board.makeTurn(step.x, step.y, tileState)) {
                             if (checkWinner()) {
                                 state = GameState.WINNER;
-                                return new Pair<>("You won.", Boolean.TRUE);
+                                return new Pair<>("You won.", true);
                             }
                             if (board.isFull()) {
                                 state = GameState.DRAW;
@@ -83,57 +100,82 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
                         }
                         return new Pair<>("You made turn.", true);
                     }
-                    return new Pair<>("It is not your game, you can't make turns.", Boolean.FALSE);
+                    return new Pair<>("It is not your game, you can't make turns.", false);
                 }
-                return new Pair<>("It is not your turn. Wait.", Boolean.FALSE);
+                return new Pair<>("It is not your turn. Wait.", false);
             case WINNER:
-                return new Pair<>("You can't make turns, this game has won by " + currPlayer.getName() + ".", Boolean.FALSE);
+                return new Pair<>("You can't make turns, this game has won by " + currPlayer.getName() + ".", false);
             case DRAW:
-                return new Pair<>("You can't make turns, there is a draw.", Boolean.FALSE);
+                return new Pair<>("You can't make turns, there is a draw.", false);
             default:
-                return new Pair<>("Chuck?!?!?!", Boolean.FALSE);
+                return new Pair<>("Chuck?!?!?!", false);
+        }
+    }
+
+
+    private byte[] drawPicture(Player player) throws TgException{
+        String picture = board.toString();
+        Image crossImage;
+        Image zeroImage;
+        Image fieldImage;
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            crossImage = ImageIO.read(new File(classLoader.getResource("tictactoe/images/krest.png").getFile()));
+            zeroImage = ImageIO.read(new File(classLoader.getResource("tictactoe/images/nol.png").getFile()));
+            fieldImage = ImageIO.read(new File(classLoader.getResource("tictactoe/images/pole.png").getFile()));
+        } catch (Exception e) {
+            throw new TgException("Need game resourses", e);
+        }
+        BufferedImage image = new BufferedImage(90, 90, BufferedImage.TYPE_INT_ARGB);
+        String b[] = picture.split("\\n");
+        char a[] = new char[9];
+        for (int i = 0; i < b.length; i++) {
+            a[i * 3] = b[i].charAt(0);
+            a[i * 3 + 1] = b[i].charAt(1);
+            a[i * 3 + 2] = b[i].charAt(2);
+        }
+        Graphics g = image.getGraphics();
+        g.drawImage(fieldImage, 0, 0, null);
+        for (int i = 0; i < a.length; i++) {
+            if ('0' == a[i]) {
+                g.drawImage(zeroImage, (i % 3) * 30, (i / 3) * 30, null);
+            }
+            if (a[i] == 'x') {
+                g.drawImage(crossImage, (i % 3) * 30, (i / 3) * 30, null);
+            }
+        }
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write( image, "png", baos );
+            baos.flush();
+            byte[] f = baos.toByteArray();
+            baos.close();
+            return f;
+        } catch (IOException e) {
+            throw new TgException("rebuffering error", e);
         }
     }
 
     @NotNull
-    public Keyboard getKeyboard(Player p) {
-        return board.getKeyboard();
-    }
-
-
     @Override
-    public File drawPicture(@NotNull Player player) {
-        return null;
-    }
-
-    @NotNull
-    @Override
-    public GameUpdate getGameUpdate(@NotNull Player player) {
-        File f = drawPicture(player);
+    public GameUpdate getGameUpdate(@NotNull Player player) throws TgException {
+        byte[] f = drawPicture(player);
         switch (state) {
             case TURN:
                 if (currPlayer == player) {
-                    return new GameUpdate("Make your turn.\n" + board.toString(), board.getKeyboard(), f);
+                    return new GameUpdate("Make your turn.\n", board.getKeyboard(), f);
                 } else {
-                    return new GameUpdate("Wait for opponent's turn.\n" + board.toString(), new Keyboard(), f);
+                    return new GameUpdate("Wait for opponent's turn.\n", new Keyboard(), f);
                 }
             case WINNER:
-                return new GameUpdate("The game has won by " + currPlayer.getName() + ".\n" + board.toString(), new Keyboard(), f);
+                return new GameUpdate("The game has won by " + currPlayer.getName() + ".\n", new Keyboard(), f);
             case DRAW:
-                return new GameUpdate("There is a draw.\n" + board.toString(), new Keyboard(), f);
+                return new GameUpdate("There is a draw.\n", new Keyboard(), f);
             default:
-                return new GameUpdate("Chuck?!?!?!\n" + board.toString(), new Keyboard(), f);
+                return new GameUpdate("Chuck?!?!?!\n", new Keyboard(), f);
         }
     }
 
-    @NotNull
-    public String getMessage(@NotNull Player player) {
-        return getInfo(player);
-    }
-
-    private String getInfo(Player player) {
-        return getGameUpdate(player).getText();
-    }
 
     @Override
     public void surrender(@NotNull Player player) {
@@ -153,7 +195,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
 
     @NotNull
     @Override
-    public List<Player> getPlayes() {
+    public List<Player> getPlayers() {
         return Arrays.asList(p1, p2);
     }
 

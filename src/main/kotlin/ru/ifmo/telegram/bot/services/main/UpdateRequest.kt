@@ -77,7 +77,7 @@ class UpdateRequest(
                 }
                 game.surrender(player)
                 sendToPlayer(player, "You left this game")
-                game.getPlayes().forEach {
+                game.getPlayers().forEach {
                     sendToPlayer(it, game.getGameUpdate(it))
                 }
                 removePlayerFromGame(player)
@@ -97,13 +97,13 @@ class UpdateRequest(
                 val resStep = (game as Game<Step>).step(step)
                 sendToPlayer(player, resStep.first)
                 if (resStep.second) {
-                    game.getPlayes()
+                    game.getPlayers()
                             .forEach { sendToPlayer(it, game.getGameUpdate(it)) }
                 } else {
                     sendToPlayer(player, game.getGameUpdate(player))
                 }
                 if (game.isFinished()) {
-                    game.getPlayes().forEach {
+                    game.getPlayers().forEach {
                         sendToPlayer(it, "game finished")
                         removePlayerFromGame(it)
                     }
@@ -253,7 +253,7 @@ class UpdateRequest(
                     sendToPlayer(player, "You can't start game")
                     continue
                 }
-                game.getPlayes().forEach { removePlayerFromPrivateGame(it) }
+                game.getPlayers().forEach { removePlayerFromPrivateGame(it) }
                 startGame(game)
                 continue
             }
@@ -274,19 +274,19 @@ class UpdateRequest(
     }
 
     fun <T : Step> startGame(game: Game<T>) {
-        game.getPlayes().forEach {
+        game.getPlayers().forEach {
             sendToPlayer(it, game.getGameUpdate(it))
         }
     }
 
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
     fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
-    fun sendFileToPlayer(player: Player, file: File) = telegramSender.sendPicture(player.chatId, file)!!
+    fun sendFileToPlayer(player: Player, file: ByteArray) = telegramSender.sendPicture(player.chatId, file)!!
 
     fun sendToPlayer(player: Player, update: GameUpdate) {
-        sendToPlayer(player, update.text, update.keyboard)
         if (update.picture != null)
             sendFileToPlayer(player, update.picture)
+        sendToPlayer(player, update.text, update.keyboard)
     }
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
