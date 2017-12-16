@@ -2,6 +2,7 @@ package ru.ifmo.telegram.bot.services.game.blingame
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.sun.istack.internal.NotNull
 import ru.ifmo.services.game.GameException
 import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
@@ -10,8 +11,15 @@ import ru.ifmo.telegram.bot.services.game.blingame.logic.Board
 import ru.ifmo.telegram.bot.services.game.blingame.logic.MyBoard
 import ru.ifmo.telegram.bot.services.game.blingame.logic.SBGame
 import ru.ifmo.telegram.bot.services.main.Games
+import ru.ifmo.telegram.bot.services.telegramApi.TgException
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
+import java.awt.Image
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.IOException
 import java.util.regex.Pattern
+import javax.imageio.ImageIO
 
 class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleStep> {
     val playerss = listOf<Player>(player1, player2)
@@ -201,5 +209,69 @@ class SeaBattleGame(val player1: Player, val player2: Player) : Game<SeaBattleSt
         return if (playerss[0] == p) 0 else 1
     }
 
+    @Throws(TgException::class)
+    fun drawPicture(@NotNull player:Player):ByteArray {
+        val picture = game.getBoards(playerToId(player))
+        val shipImage: Image
+        val crash_shipImage:Image
+        val bombImage:Image
+        val fireImage:Image
+        val fieldImage:Image
+        try
+        {
+            val classLoader = Thread.currentThread().getContextClassLoader()
+            shipImage = ImageIO.read(File(classLoader.getResource("sea_batlle/images/ship.png").getFile()))
+            crash_shipImage = ImageIO.read(File(classLoader.getResource("sea_batlle/images/crash_ship.png").getFile()))
+            bombImage = ImageIO.read(File(classLoader.getResource("sea_batlle/images/bomb.png").getFile()))
+            fireImage = ImageIO.read(File(classLoader.getResource("sea_batlle/images/fire.png").getFile()))
+            fieldImage = ImageIO.read(File(classLoader.getResource("sea_batlle/images/sea_pole.png").getFile()))
+        }
+        catch (e:Exception) {
+            throw TgException("Need game resourses", e)
+        }
+        val image = BufferedImage(320, 320, BufferedImage.TYPE_INT_ARGB)
+        val b = picture.split(("\\n").toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()
+        val a = CharArray(100)
+        for (i in b.indices)
+        {
+            for (j in 0..9)
+            {
+                a[i * 10 + j] = b[i].get(j)
+            }
+        }
+        val g = image.getGraphics()
+        g.drawImage(fieldImage, 0, 0, null)
+        for (i in a.indices)
+        {
+            if ('s' == a[i])
+            {
+                g.drawImage(shipImage, (i % 10) * 30 + 10, (i / 10) * 30 + 10, null)
+            }
+            if (a[i] == 'c')
+            {
+                g.drawImage(crash_shipImage, (i % 10) * 30 + 10, (i / 10) * 30 + 10, null)
+            }
+            if ('b' == a[i])
+            {
+                g.drawImage(bombImage, (i % 10) * 30 + 10, (i / 10) * 30 + 10, null)
+            }
+            if (a[i] == 'f')
+            {
+                g.drawImage(fireImage, (i % 10) * 30 + 10, (i / 10) * 30 + 10, null)
+            }
+        }
+        try
+        {
+            val baos = ByteArrayOutputStream()
+            ImageIO.write(image, "png", baos)
+            baos.flush()
+            val f = baos.toByteArray()
+            baos.close()
+            return f
+        }
+        catch (e: IOException) {
+            throw TgException("rebuffering error", e)
+        }
+    }
     data class placeShipArgs(val x: Int, val y: Int, val size: Int, val dir: MyBoard.Companion.ShipPlaceDirection)
 }
