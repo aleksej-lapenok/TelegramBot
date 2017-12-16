@@ -12,9 +12,9 @@ class SBGame() {
     fun getGameState(): GameState = state
 
     fun placeShip(playerId: Int,
-                  size: Int,
                   x: Int,
                   y: Int,
+                  size: Int,
                   direction: MyBoard.Companion.ShipPlaceDirection)
             : MyBoard.Companion.ShipPlaceResult {
         assert(state == GameState.PlacingShips)

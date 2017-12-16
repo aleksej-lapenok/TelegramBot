@@ -58,7 +58,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
     }
 
     private fun parsePlacingShips(step: SeaBattleStep) : placeShipArgs? {
-        val args = step.command.split(Pattern.compile("\n+"));
+        val args = step.command.split(" ");
         if (args.size < 4) {
             return null
         }
@@ -66,9 +66,13 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
         var y = 0
         var size = 0
         try {
-            x = args[0].toInt()
             y = args[1].toInt()
             size = args[2].toInt()
+            if (args[1][0] in 'a' .. 'j') {
+                x = args[0][0] - 'a'
+            } else {
+                throw Exception()
+            }
         } catch (e : Exception) {
             return null
         }
@@ -90,8 +94,12 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
         var x = 0
         var y = 0
         try {
-            x = args[0].toInt()
             y = args[1].toInt()
+            if (args[1][0] in 'a' .. 'j') {
+                x = args[1][0] - 'a'
+            } else {
+                throw Exception()
+            }
         } catch (e : Exception) {
             return null
         }
