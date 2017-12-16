@@ -8,11 +8,10 @@ import ru.ifmo.telegram.bot.services.game.blingame.logic.MyBoard
 import ru.ifmo.telegram.bot.services.game.blingame.logic.SBGame
 import ru.ifmo.telegram.bot.services.main.Games
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
-import java.io.File
 import java.util.regex.Pattern
 
 class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
-    val players = listOf<Player>(player1, player2)
+    val playerss = listOf<Player>(player1, player2)
     val game = SBGame()
     val kboard = Keyboard()
 
@@ -54,7 +53,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
                 return Pair("Ti pidor: not your turn", false)
             }
             is SBGame.Companion.GameState.GameEnded ->
-                return Pair("Ti pidor: game won by ${players[game.whoIsWinner()].name}", false)
+                return Pair("Ti pidor: game won by ${playerss[game.whoIsWinner()].name}", false)
         }
     }
 
@@ -99,7 +98,7 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
         return Pair(x, y)
     }
 
-    override fun drawPicture(player: Player): File? = null
+//    override fun drawPicture(player: Player): File? = null
 
     override fun getGameUpdate(player: Player): GameUpdate {
         val state = game.getGameState()
@@ -155,10 +154,6 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
         TODO()
     }
 
-    override fun getPlayes(): List<Player> {
-        return players
-    }
-
     override fun getGameId(): Games {
         return Games.SEABATTLE
     }
@@ -171,13 +166,17 @@ class SeaBattleGame(player1: Player, player2: Player) : Game<SeaBattleStep> {
         val s = game.getGameState()
         return when(s) {
             is SBGame.Companion.GameState.PlacingShips -> true
-            is SBGame.Companion.GameState.PlayerTurn -> players[s.playerId] == player
+            is SBGame.Companion.GameState.PlayerTurn -> playerss[s.playerId] == player
             is SBGame.Companion.GameState.GameEnded -> false
         }
     }
 
+    override fun getPlayers(): List<Player> {
+        return playerss
+    }
+
     fun playerToId(p: Player): Int {
-        return if (players[0] == p) 0 else 1
+        return if (playerss[0] == p) 0 else 1
     }
 
     data class placeShipArgs(val x: Int, val y: Int, val size: Int, val dir: MyBoard.Companion.ShipPlaceDirection)
