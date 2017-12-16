@@ -1,6 +1,9 @@
 package ru.ifmo.services.game.checkers;
 
-import ru.ifmo.services.game.checkers.CheckersUtils.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import ru.ifmo.services.game.checkers.CheckersUtils.Checker;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
@@ -16,12 +19,28 @@ public class CheckersBoard {
     //(0,0) - top left
     private List<List<CheckersTile>> tiles;
 
-    Keyboard getKeyboard() {
+    public CheckersBoard(JsonObject json) {
+        tiles = new ArrayList<>(SIZE);
+        for (JsonElement line : json.get("tiles").getAsJsonArray()) {
+            ArrayList<CheckersTile> lineOfTiles = new ArrayList<>();
+            for (JsonElement t : line.getAsJsonArray()) {
+                lineOfTiles.add(new CheckersTile(t.getAsJsonObject()));
+            }
+            tiles.add(lineOfTiles);
+        }
+    }
+
+    Keyboard getKeyboard(boolean reversed) {
         Keyboard keyboard = new Keyboard();
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
-                String data = "/turn " + (i + 1) + " " + (j + 1);
-                keyboard.addButton(new Button("callback_data", data, tiles.get(i).get(j).toString()));
+                if (reversed && false) {
+                    String data = "/turn " + (SIZE - j) + " " + (SIZE - i);
+                    keyboard.addButton(new Button("callback_data", data, tiles.get(SIZE - 1 - i).get(SIZE - 1 - j).toString()));
+                } else {
+                    String data = "/turn " + (i + 1) + " " + (j + 1);
+                    keyboard.addButton(new Button("callback_data", data, tiles.get(i).get(j).toString()));
+                }
             }
             keyboard.addRow();
         }
@@ -137,10 +156,10 @@ public class CheckersBoard {
         }
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
-                if (i < 3 && i % 2 == j % 2) {
+                if (i < 3 && i % 2 != j % 2) {
                     tiles.get(i).get(j).setChecker(Checker.WHITE_SIMPLE);
                 }
-                if (i > 4 && i % 2 == j % 2) {
+                if (i > 4 && i % 2 != j % 2) {
                     tiles.get(i).get(j).setChecker(Checker.BLACK_SIMPLE);
                 }
             }
@@ -157,5 +176,30 @@ public class CheckersBoard {
             sb.append('\n');
         }
         return sb.toString();
+    }
+
+    public String toReverseString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = SIZE - 1; i >= 0; i--) {
+            for (int j = SIZE - 1; j >= 0; j--) {
+                sb.append(tiles.get(i).get(j).toString());
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    public JsonElement toJson() {
+        JsonArray array = new JsonArray();
+        for (List<CheckersTile> list : tiles) {
+            JsonArray local = new JsonArray();
+            for (CheckersTile t : list) {
+                local.add(t.toJson());
+            }
+            array.add(local);
+        }
+        JsonObject k = new JsonObject();
+        k.add("tiles", array);
+        return k;
     }
 }
