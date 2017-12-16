@@ -3,9 +3,13 @@ package ru.ifmo.telegram.bot.services.main
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import ru.ifmo.services.game.GameUpdate
 import ru.ifmo.telegram.bot.entity.Player
+import ru.ifmo.telegram.bot.entity.PrivateGame
+import ru.ifmo.telegram.bot.repository.GameRepository
 import ru.ifmo.telegram.bot.repository.PlayerRepository
+import ru.ifmo.telegram.bot.repository.PrivateGameRepository
 import ru.ifmo.telegram.bot.services.game.Game
 import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
@@ -14,23 +18,30 @@ import ru.ifmo.telegram.bot.services.telegramApi.classes.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
-import java.io.File
+import ru.ifmo.telegram.bot.services.telegramApi.classes.TypeUpdate
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Update
 
 @Service
 class UpdateRequest(
         val updatesCollector: UpdatesCollector,
         val playerRepository: PlayerRepository,
+        val gameRepository: GameRepository,
+        val privateGameRepository: PrivateGameRepository,
         val mainGameFactory: MainGameFactory,
         val telegramSender: TelegramSender) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private var lastUpdate = 0L
-    private val games = mutableMapOf<Player, Game<*>>()
+    //    private val games = mutableMapOf<Player, Game<*>>()
     private val query = Games.values().toMutableList().map { it.name to mutableSetOf<Player>() }.toMap()
     //    private val invents = mutableMapOf<Player, MutableList<Invent>>()
-    private val privateGames = mutableMapOf<Player, PrivateGame>()
+//    private val privateGames = mutableMapOf<Player, PrivateGame>()
+
+//    private val playersForSave = mutableSetOf<Player>()
+//    private val gameToGameDb = mutableMapOf<Game<*>, ru.ifmo.telegram.bot.entity.Game>()
 
     @Scheduled(fixedDelay = 1000)
+    @Transactional(readOnly = false)
     fun getUpdates() {
         val response = telegramSender.getUpdates(lastUpdate + 1)
         val result = updatesCollector.getUpdates(response)
@@ -80,7 +91,13 @@ class UpdateRequest(
                 game.getPlayers().forEach {
                     sendToPlayer(it, game.getGameUpdate(it))
                 }
-                removePlayerFromGame(player)
+                player.game!!.json = game.toJson()
+                gameRepository.save(player.game!!)
+                if (game.isFinished()) {
+                    game.getPlayers().forEach { removePlayerFromGame(it) }
+                } else {
+                    removePlayerFromGame(player)
+                }
                 continue
             }
             if (update.data.startsWith("/turn")) {
@@ -102,6 +119,8 @@ class UpdateRequest(
                 } else {
                     sendToPlayer(player, game.getGameUpdate(player))
                 }
+                player.game!!.json = game.toJson()
+                gameRepository.save(player.game!!)
                 if (game.isFinished()) {
                     game.getPlayers().forEach {
                         sendToPlayer(it, "game finished")
@@ -121,7 +140,7 @@ class UpdateRequest(
                     sendToPlayer(player, "You should play in ${privateGame.game.name} or delete it with command /delete or leave with command /leave")
                     continue
                 }
-                val name = update.data.split(" ")[1]
+                val name = update.data.split(" ")[1].toUpperCase()
                 try {
                     Games.valueOf(name)
                 } catch (e: IllegalArgumentException) {
@@ -141,9 +160,9 @@ class UpdateRequest(
                     sendToPlayer(player, "You can't delete game, because you didn't create it")
                     continue
                 }
-                privateGame.players.forEach { removePlayerFromPrivateGame(player) }
+                privateGame.players.forEach { removePlayerFromPrivateGame(it) }
                 privateGame.players.forEach { sendToPlayer(it, "${player.name} deleted this game") }
-                privateGame.inventions.forEach { sendToPlayer(it, "${player.name} deleted game ${privateGame.game.name}, invention not valid") }
+                privateGame.invitations.forEach { sendToPlayer(it, "${player.name} deleted game ${privateGame.game.name}, invention not valid") }
 
                 continue
             }
@@ -157,7 +176,7 @@ class UpdateRequest(
                 removePlayerFromPrivateGame(player)
                 privateGame.players.remove(player)
                 privateGame.players.forEach { sendToPlayer(it, "${player.name} left game") }
-                privateGame.inventions.forEach { sendToPlayer(it, "${player.name} left game") }
+                privateGame.invitations.forEach { sendToPlayer(it, "${player.name} left game") }
                 sendToPlayer(player, "You left game")
                 continue
             }
@@ -173,7 +192,7 @@ class UpdateRequest(
                     continue
                 }
                 val factory = mainGameFactory.getGameFactory(privateGame.game)!!
-                if (privateGame.players.size + privateGame.inventions.size + 1 > factory.maxNumberPlayers()) {
+                if (privateGame.players.size + privateGame.invitations.size + 1 > factory.maxNumberPlayers()) {
                     sendToPlayer(player, "No places in game")
                     continue
                 }
@@ -183,7 +202,7 @@ class UpdateRequest(
                     sendToPlayer(player, "Unknown player $player2")
                     continue
                 }
-                if (privateGame.inventions.contains(player2)) {
+                if (privateGame.invitations.contains(player2)) {
                     sendToPlayer(player, "You have already invited ${player2.name}")
                     continue
                 }
@@ -196,7 +215,7 @@ class UpdateRequest(
                 keyBoard.addButton(Button("callback_data", "/hide ${player.chatId}", "Decline"))
                 sendToPlayer(player2, "You reserve invitation into ${privateGame.game.name} from ${player.name}", keyBoard)
                 sendToPlayer(player, "Invitations was sent")
-                privateGame.inventions.add(player2)
+                privateGame.invitations.add(player2)
                 continue
             }
             if (update.data.startsWith("/hide")) {
@@ -210,13 +229,13 @@ class UpdateRequest(
                     continue
                 }
                 val game = getPrivateGameByPlayer(player2)
-                if (game == null || !game.inventions.contains(player)) {
+                if (game == null || !game.invitations.contains(player)) {
                     sendToPlayer(player, "No invitation")
                     continue
                 }
-                game.inventions.remove(player)
+                game.invitations.remove(player)
                 game.players.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
-                game.inventions.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
+                game.invitations.forEach { sendToPlayer(it, "${player.name} didn't accept invitation") }
                 sendToPlayer(player, "You refused invitation")
                 continue
             }
@@ -235,15 +254,16 @@ class UpdateRequest(
                     telegramSender.hideKeyboard(update)
                 }
                 val game = getPrivateGameByPlayer(player2)
-                if (game == null || !game.inventions.contains(player)) {
+                if (game == null || !game.invitations.contains(player)) {
                     sendToPlayer(player, "No invitation")
                     continue
                 }
                 game.players.add(player)
-                game.inventions.remove(player)
+                game.invitations.remove(player)
+                privateGameRepository.save(game)
 
                 game.players.forEach { sendToPlayer(it, "${player.name} in game") }
-                game.inventions.forEach { sendToPlayer(it, "${player.name} in game") }
+                game.invitations.forEach { sendToPlayer(it, "${player.name} in game") }
                 addPlayerInPrivateGame(player, game)
                 continue
             }
@@ -290,16 +310,19 @@ class UpdateRequest(
     }
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
-        games[player] = game
+//        games[player] = game
     }
 
     fun addPlayerInPrivateGame(player: Player, privateGame: PrivateGame) {
-        privateGames[player] = privateGame
+        player.privateGame = privateGame
+        playerRepository.save(player)
+        query.values.forEach { it.remove(player) }
+//        privateGames[player] = privateGame
     }
 
     fun tryToGetNewGame(name: String): Game<*>? {
         val factory = mainGameFactory.getGameFactory(name)
-        return if (query[name]?.size!! >= factory!!.minNumberPlayers()) {
+        val game = if (query[name]?.size!! >= factory!!.minNumberPlayers()) {
             val playes = query[name]!!.toMutableList()
             query[name]!!.clear()
             val game = factory.getGame(*playes.toTypedArray())
@@ -308,8 +331,13 @@ class UpdateRequest(
             }
             game
         } else {
-            null
+            return null
         }
+        val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = Games.valueOf(name))
+        gameRepository.save(gameDB)
+        game.getPlayers().forEach { it.game = gameDB }
+        playerRepository.save(game.getPlayers())
+        return game
     }
 
     fun getOrCreatePlayer(update: Update): Player {
@@ -321,37 +349,50 @@ class UpdateRequest(
         return player!!
     }
 
-    fun getGameByPlayer(player: Player) = games[player]
+    fun getGameByPlayer(player: Player): Game<*>? {
+        val gameDB = player.game ?: return null
+        val factory = mainGameFactory.getGameFactory(gameDB.game)!!
+        val players = playerRepository.findByGame(gameDB)
+        return factory.fromJson(gameDB.json, *players.toTypedArray())
+    }
 
-    fun getPrivateGameByPlayer(player: Player) = privateGames[player]
+    fun getPrivateGameByPlayer(player: Player) = player.privateGame
 
-    fun createPrivateGame(player: Player, game: String) = privateGames.put(player, PrivateGame(Games.valueOf(game), player))
+    fun createPrivateGame(player: Player, game: String) {
+        val prGame = PrivateGame(game = Games.valueOf(game), creator = player)
+        privateGameRepository.save(prGame)
+        player.privateGame = prGame
+        playerRepository.save(player)
+        query.values.forEach { it.remove(player) }
+    }
 
     fun tryToGetPrivateGame(player: Player): Game<*>? {
         val privateGame = getPrivateGameByPlayer(player) ?: return null
         val factory = mainGameFactory.getGameFactory(privateGame.game)!!
-        return if (privateGame.players.size >= factory.minNumberPlayers() && privateGame.creator == player) {
+        val game = if (privateGame.players.size >= factory.minNumberPlayers() && privateGame.creator == player) {
             val game = factory.getGame(*privateGame.players.toTypedArray())
             privateGame.players.forEach { addPlayerInGame(it, game) }
             game
         } else {
-            null
+            return null
         }
+        val gameDB = ru.ifmo.telegram.bot.entity.Game(json = game.toJson(), game = privateGame.game)
+        gameRepository.save(gameDB)
+        game.getPlayers().forEach { it.game = gameDB }
+        playerRepository.save(game.getPlayers())
+        return game
     }
 
-    fun removePlayerFromGame(player: Player) = games.remove(player)
+    fun removePlayerFromGame(player: Player) {
+        player.game = null
+        playerRepository.save(player)
+    }
 
     fun removePlayerFromPrivateGame(player: Player) {
-        privateGames.remove(player)
+        player.privateGame = null
+        playerRepository.save(player)
     }
 
     fun addPlayerInQuery(player: Player, games: String) = query[games]!!.add(player)
 
-    data class Invent(val game: PrivateGame, val playerTo: Player)
-
-    data class PrivateGame(val game: Games, val creator: Player) {
-
-        val players = mutableSetOf(creator)
-        val inventions = mutableSetOf<Player>()
-    }
 }
