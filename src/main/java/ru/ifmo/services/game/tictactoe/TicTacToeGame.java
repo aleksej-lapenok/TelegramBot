@@ -10,9 +10,17 @@ import ru.ifmo.services.game.GameUpdate;
 import ru.ifmo.telegram.bot.entity.Player;
 import ru.ifmo.telegram.bot.services.game.Game;
 import ru.ifmo.telegram.bot.services.main.Games;
+import ru.ifmo.telegram.bot.services.telegramApi.TgException;
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.*;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,6 +28,7 @@ import java.util.List;
  * Created by Cawa on 02.12.2017.
  */
 public class TicTacToeGame<S extends TTTStep> implements Game<S> {
+    //private static final File PICTURES_DIRECTORY = new File(TicTacToeGame.class.getClassLoader().getResource("/tictactoe/images").getFile());
     private Player p1, p2, currPlayer;
     private Board board;
     private GameState state;
@@ -32,7 +41,7 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
         board = new Board();
     }
 
-    TicTacToeGame(String jsonString, Player player1, Player player2) throws GameException{
+    TicTacToeGame(String jsonString, Player player1, Player player2) throws GameException {
         JsonParser parser = new JsonParser();
         JsonObject gameJson = parser.parse(jsonString).getAsJsonObject();
         state = GameState.valueOf(gameJson.get("state").getAsString());
@@ -104,28 +113,66 @@ public class TicTacToeGame<S extends TTTStep> implements Game<S> {
     }
 
 
-    @Override
-    public File drawPicture(@NotNull Player player) {
-        return null;
+    private byte[] drawPicture(Player player) throws TgException{
+        String picture = board.toString();
+        Image crossImage;
+        Image zeroImage;
+        Image fieldImage;
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            crossImage = ImageIO.read(new File(classLoader.getResource("tictactoe/images/krest.png").getFile()));
+            zeroImage = ImageIO.read(new File(classLoader.getResource("tictactoe/images/nol.png").getFile()));
+            fieldImage = ImageIO.read(new File(classLoader.getResource("tictactoe/images/pole.png").getFile()));
+        } catch (Exception e) {
+            throw new TgException("Need game resourses", e);
+        }
+        BufferedImage image = new BufferedImage(90, 90, BufferedImage.TYPE_INT_ARGB);
+        String b[] = picture.split("\\n");
+        char a[] = new char[9];
+        for (int i = 0; i < b.length; i++) {
+            a[i * 3] = b[i].charAt(0);
+            a[i * 3 + 1] = b[i].charAt(1);
+            a[i * 3 + 2] = b[i].charAt(2);
+        }
+        Graphics g = image.getGraphics();
+        g.drawImage(fieldImage, 0, 0, null);
+        for (int i = 0; i < a.length; i++) {
+            if ('0' == a[i]) {
+                g.drawImage(zeroImage, (i % 3) * 30, (i / 3) * 30, null);
+            }
+            if (a[i] == 'x') {
+                g.drawImage(crossImage, (i % 3) * 30, (i / 3) * 30, null);
+            }
+        }
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write( image, "png", baos );
+            baos.flush();
+            byte[] f = baos.toByteArray();
+            baos.close();
+            return f;
+        } catch (IOException e) {
+            throw new TgException("rebuffering error", e);
+        }
     }
 
     @NotNull
     @Override
-    public GameUpdate getGameUpdate(@NotNull Player player) {
-        File f = drawPicture(player);
+    public GameUpdate getGameUpdate(@NotNull Player player) throws TgException {
+        byte[] f = drawPicture(player);
         switch (state) {
             case TURN:
                 if (currPlayer == player) {
-                    return new GameUpdate("Make your turn.\n" + board.toString(), board.getKeyboard(), f);
+                    return new GameUpdate("Make your turn.\n", board.getKeyboard(), f);
                 } else {
-                    return new GameUpdate("Wait for opponent's turn.\n" + board.toString(), new Keyboard(), f);
+                    return new GameUpdate("Wait for opponent's turn.\n", new Keyboard(), f);
                 }
             case WINNER:
-                return new GameUpdate("The game has won by " + currPlayer.getName() + ".\n" + board.toString(), new Keyboard(), f);
+                return new GameUpdate("The game has won by " + currPlayer.getName() + ".\n", new Keyboard(), f);
             case DRAW:
-                return new GameUpdate("There is a draw.\n" + board.toString(), new Keyboard(), f);
+                return new GameUpdate("There is a draw.\n", new Keyboard(), f);
             default:
-                return new GameUpdate("Chuck?!?!?!\n" + board.toString(), new Keyboard(), f);
+                return new GameUpdate("Chuck?!?!?!\n", new Keyboard(), f);
         }
     }
 

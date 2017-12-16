@@ -142,8 +142,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
     }
 
     @NotNull
-    @Override
-    public File drawPicture(@NotNull Player player) {
-        return new File("");
+    public byte[] drawPicture(@NotNull Player player) {
+        return new byte[1];
     }
 }

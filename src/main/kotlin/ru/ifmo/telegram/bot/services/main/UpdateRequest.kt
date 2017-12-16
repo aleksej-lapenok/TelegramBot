@@ -13,8 +13,8 @@ import ru.ifmo.telegram.bot.repository.PrivateGameRepository
 import ru.ifmo.telegram.bot.services.game.Game
 import ru.ifmo.telegram.bot.services.game.Step
 import ru.ifmo.telegram.bot.services.telegramApi.TelegramSender
-import ru.ifmo.telegram.bot.services.telegramApi.TypeUpdate
-import ru.ifmo.telegram.bot.services.telegramApi.Update
+import ru.ifmo.telegram.bot.services.telegramApi.classes.TypeUpdate
+import ru.ifmo.telegram.bot.services.telegramApi.classes.Update
 import ru.ifmo.telegram.bot.services.telegramApi.UpdatesCollector
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Button
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Keyboard
@@ -300,12 +300,12 @@ class UpdateRequest(
 
     fun sendToPlayer(player: Player, message: String) = telegramSender.sendMessage(player.chatId, message)!!
     fun sendToPlayer(player: Player, message: String, keyboard: Keyboard) = telegramSender.sendMessage(player.chatId, message, keyboard)!!
-    fun sendFileToPlayer(player: Player, file: File) = telegramSender.sendPicture(player.chatId, file)!!
+    fun sendFileToPlayer(player: Player, file: ByteArray) = telegramSender.sendPicture(player.chatId, file)!!
 
     fun sendToPlayer(player: Player, update: GameUpdate) {
-        sendToPlayer(player, update.text, update.keyboard)
         if (update.picture != null)
             sendFileToPlayer(player, update.picture)
+        sendToPlayer(player, update.text, update.keyboard)
     }
 
     fun addPlayerInGame(player: Player, game: Game<*>) {
