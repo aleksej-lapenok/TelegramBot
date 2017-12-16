@@ -69,7 +69,6 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
     }
 
     @NotNull
-    @Override
     public byte[] drawPicture(@NotNull Player player) throws TgException {
         String picture = board.toString();
         Image aImage;
@@ -313,7 +312,7 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
 
     @NotNull
     @Override
-    public GameUpdate getGameUpdate(@NotNull Player player) {
+    public GameUpdate getGameUpdate(@NotNull Player player) throws TgException {
         return new GameUpdate(getMessage(player), getKeyboard(player), drawPicture(player));
     }
 
@@ -330,7 +329,7 @@ public class PairsGame<S extends PairsStep> implements Game<S> {
 
     @NotNull
     @Override
-    public List<Player> getPlayes() {
+    public List<Player> getPlayers() {
         return Collections.singletonList(player);
     }
 
