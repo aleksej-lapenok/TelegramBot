@@ -8,6 +8,7 @@ import ru.ifmo.services.game.tictactoe.TTTStepFactory
 import ru.ifmo.telegram.bot.services.game.GameFactory
 import ru.ifmo.telegram.bot.services.game.StepFactory
 import ru.ifmo.telegram.bot.services.game.blingame.SeaBattleGameFactory
+import ru.ifmo.telegram.bot.services.game.blingame.SeaBattleStepFactory
 
 @Service
 class MainGameFactory {
@@ -20,7 +21,10 @@ class MainGameFactory {
 
     fun getGameFactory(games: Games) = gameFactories[games]
 
-    val stepFactories = mutableMapOf<Games, StepFactory<*>>(Pair(Games.TTT, TTTStepFactory()), Pair(Games.CHECKERS, CheckersStepFactory()))
+    val stepFactories = mutableMapOf<Games, StepFactory<*>>(
+            Pair(Games.TTT, TTTStepFactory()),
+            Pair(Games.CHECKERS, CheckersStepFactory()),
+            Pair(Games.SEABATTLE, SeaBattleStepFactory()))
 
     fun getStepFactory(name: String) = getStepFactory(Games.valueOf(name))
 
