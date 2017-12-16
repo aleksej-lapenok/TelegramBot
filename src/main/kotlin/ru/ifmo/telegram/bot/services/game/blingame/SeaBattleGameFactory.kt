@@ -39,8 +39,7 @@ class SeaBattleGameFactory : GameFactory<SeaBattleStep, SeaBattleGame> {
                 throw GameException("Wrong players for deserialization")
             }
         }
-        val seaBattleGame = SeaBattleGame(p1, p2)
-
+        val seaBattleGame = SeaBattleGame(p1, p2, gameJson.get("game").asJsonObject)
         return seaBattleGame
     }
 }

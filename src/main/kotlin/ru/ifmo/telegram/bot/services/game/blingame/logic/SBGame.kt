@@ -15,7 +15,10 @@ class SBGame() {
 
     constructor(gameJson : JsonObject) : this() {
         state = stateFromJson(gameJson.get("state").asJsonObject)
-        myBoard1 = MyBoard()
+        myBoard1 = MyBoard(gameJson.get("myBoard1").asJsonObject)
+        myBoard1 = MyBoard(gameJson.get("myBoard2").asJsonObject)
+        enemyBoard1 = EnemyBoard(gameJson.get("enemyBoard1").asJsonObject)
+        enemyBoard2 = EnemyBoard(gameJson.get("enemyBoard1").asJsonObject)
     }
 
     init {
