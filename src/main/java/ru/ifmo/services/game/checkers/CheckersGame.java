@@ -74,7 +74,9 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
             StringBuilder sb = new StringBuilder();
             if (currPlayer != 0) {
                 sb.append("Current player: ");
-                sb.append(currPlayer == 1 ? player1.getName() : player2.getName());
+                sb.append(currPlayer == 1
+                        ? player1.getName() + " (white)"
+                        : player2.getName() + " (black)");
             } else {
                 if (winner != null) {
                     sb.append("Winner: ");
@@ -127,7 +129,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     private Keyboard getKeyboard(@NotNull Player player) {
-        return board.getKeyboard();
+        return board.getKeyboard(player.equals(player1));
     }
 
     @NotNull

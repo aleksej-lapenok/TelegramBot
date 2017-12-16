@@ -39,7 +39,7 @@ public class CheckersTile {
             case BLACK_QUEEN:
                 return "B";
             default:
-                return "*";
+                return "-";
         }
     }
 
