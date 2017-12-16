@@ -21,7 +21,7 @@ public class CheckersBoard {
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
                 if (reversed) {
-                    String data = "/turn " + (SIZE + 2 - i) + " " + (SIZE + 2 - j);
+                    String data = "/turn " + (SIZE - i) + " " + (SIZE - j);
                     keyboard.addButton(new Button("callback_data", data, tiles.get(SIZE - 1 - i).get(SIZE - 1 - j).toString()));
                 } else {
                     String data = "/turn " + (i + 1) + " " + (j + 1);

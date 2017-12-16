@@ -144,7 +144,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     @Override
-    public GameUpdate getGameUpdate(@NotNull Player player) {
+    public GameUpdate getGameUpdate(@NotNull Player player) throws TgException {
         return new GameUpdate(getMessage(player), getKeyboard(player), drawPicture(player));
     }
 
@@ -155,7 +155,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     public byte[] drawPicture(@NotNull Player player) throws TgException {
-        String picture = player == player2 ? board.toString() : board.toReverseString();
+        String picture = player == player1 ? board.toString() : board.toReverseString();
         Image whiteImage;
         Image blackImage;
         Image whiteDImage;
