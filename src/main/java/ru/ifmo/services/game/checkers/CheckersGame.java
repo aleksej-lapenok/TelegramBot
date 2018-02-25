@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class CheckersGame<S extends CheckersStep> implements Game<S> {
     private boolean isFirstTurn;
@@ -104,8 +105,8 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
             if (currPlayer != 0) {
                 sb.append("Current player: ");
                 sb.append(currPlayer == 1
-                        ? player1.getName() + " (white)"
-                        : player2.getName() + " (black)");
+                        ? Objects.requireNonNull(player1.getName()).replace('_', ' ') + " (white)"
+                        : Objects.requireNonNull(player2.getName()).replace('_',' ') + " (black)");
             } else {
                 if (winner != null) {
                     sb.append("Winner: ");
@@ -115,11 +116,11 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
                 }
             }
             sb.append('\n');
-            if (player.equals(player1)) {
-                sb.append(board.toString());
-            } else {
-                sb.append(board.toString());
-            }
+//            if (player.equals(player1)) {
+//                sb.append(board.toString());
+//            } else {
+//                sb.append(board.toString());
+//            }
             return sb.toString();
         } else {
             return "Wrong player";
@@ -170,7 +171,11 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     private Keyboard getKeyboard(@NotNull Player player) {
-        return board.getKeyboard(player.equals(player1));
+        if (currPlayer==1 && player.equals(player1))
+            return board.getKeyboard(player.equals(player1));
+        if (currPlayer!=1 && !player.equals(player1))
+            return board.getKeyboard(player.equals(player1));
+        return new Keyboard();
     }
 
     @NotNull
