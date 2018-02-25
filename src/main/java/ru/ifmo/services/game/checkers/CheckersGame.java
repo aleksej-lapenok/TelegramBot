@@ -106,7 +106,7 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
                 sb.append("Current player: ");
                 sb.append(currPlayer == 1
                         ? Objects.requireNonNull(player1.getName()).replace('_', ' ') + " (white)"
-                        : Objects.requireNonNull(player2.getName()).replace('_',' ') + " (black)");
+                        : Objects.requireNonNull(player2.getName()).replace('_', ' ') + " (black)");
             } else {
                 if (winner != null) {
                     sb.append("Winner: ");
@@ -171,9 +171,9 @@ public class CheckersGame<S extends CheckersStep> implements Game<S> {
 
     @NotNull
     private Keyboard getKeyboard(@NotNull Player player) {
-        if (currPlayer==1 && player.equals(player1))
+        if (currPlayer != 0 && currPlayer == 1 && player.equals(player1))
             return board.getKeyboard(player.equals(player1));
-        if (currPlayer!=1 && !player.equals(player1))
+        if (currPlayer != 0 && currPlayer != 1 && !player.equals(player1))
             return board.getKeyboard(player.equals(player1));
         return new Keyboard();
     }
