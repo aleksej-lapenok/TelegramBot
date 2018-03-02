@@ -3,3 +3,5 @@ spring:
     database: hsql
   datasource:
     initialize: false
+
+bot-token: test

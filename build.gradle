@@ -22,6 +22,9 @@ apply plugin: 'war'
 group = 'ru.ifmo.telegram'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
+springBoot {
+	executable = true
+}
 compileKotlin {
 	kotlinOptions.jvmTarget = "1.8"
 }
