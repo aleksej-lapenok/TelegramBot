@@ -20,9 +20,10 @@ import java.util.List;
 @Service
 public class UpdatesCollector {
 
-    private Logger logger=LoggerFactory.getLogger(this.getClass());
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    UpdatesCollector() {}
+    UpdatesCollector() {
+    }
 
     public List<Update> getUpdates(String response) throws TgException {
         logger.info(response);
@@ -75,7 +76,6 @@ public class UpdatesCollector {
 
         return updates;
     }
-
 
 
 }
