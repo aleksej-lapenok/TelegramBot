@@ -20,7 +20,7 @@ import ru.ifmo.telegram.bot.services.telegramApi.classes.TypeUpdate
 import ru.ifmo.telegram.bot.services.telegramApi.classes.Update
 
 @Service
-class UpdateRequest(
+open class UpdateRequest(
         val updatesCollector: UpdatesCollector,
         val playerRepository: PlayerRepository,
         val gameRepository: GameRepository,
@@ -40,7 +40,7 @@ class UpdateRequest(
 
     @Scheduled(fixedDelay = 1000)
     @Transactional(readOnly = false)
-    fun getUpdates() {
+    open fun getUpdates() {
         val response = telegramSender.getUpdates(lastUpdate + 1)
         val result = updatesCollector.getUpdates(response)
         lastUpdate = result.maxBy { it.update_id }?.update_id ?: lastUpdate
@@ -211,7 +211,8 @@ class UpdateRequest(
                 val keyBoard = Keyboard()
                 keyBoard.addButton(Button("callback_data", "/accept ${player.chatId}", "Accept"))
                 keyBoard.addButton(Button("callback_data", "/hide ${player.chatId}", "Decline"))
-                sendToPlayer(player2, "You reserve invitation into ${privateGame.game.name} from ${player.name}", keyBoard)
+                keyBoard.addRow()
+                sendToPlayer(player2, "You reserve invitation info ${privateGame.game.name} from ${player.name!!.replace("_"," ")}", keyBoard)
                 sendToPlayer(player, "Invitations was sent")
                 privateGame.invitations.add(player2)
                 continue

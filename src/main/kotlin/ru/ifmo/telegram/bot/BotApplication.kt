@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
 @EnableScheduling
-class BotApplication
+open class BotApplication
 
 fun main(args: Array<String>) {
     //Registrator.registrate()

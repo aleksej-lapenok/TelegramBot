@@ -18,10 +18,14 @@ apply plugin: 'kotlin-spring'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'war'
+apply plugin: 'idea'
 
 group = 'ru.ifmo.telegram'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
+springBoot {
+	executable = true
+}
 compileKotlin {
 	kotlinOptions.jvmTarget = "1.8"
 }

@@ -6,5 +6,4 @@ spring:
   profiles:
     active:
       - mysql
-
-bot-token: 459026942:AAGNS85a3zns03L-lKKo1teLWkBqIZAtQzU
+      - token
